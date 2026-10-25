@@ -1,0 +1,486 @@
+{
+  "$description": "Gate Chart – finales HUD-Konzept des Flughafen-Tycoon. Format nach W3C Design Tokens ($type/$value). Dimensionen in px (Unity: Referenzbreite 390). Alpha als Hex8 (RRGGBBAA).",
+  "color": {
+    "surface": {
+      "base": {
+        "$type": "color",
+        "$value": "#07111F"
+      },
+      "panel": {
+        "$type": "color",
+        "$value": "#0F2040",
+        "$description": "deckend, kein Blur"
+      },
+      "raised": {
+        "$type": "color",
+        "$value": "#1A3260"
+      },
+      "inset": {
+        "$type": "color",
+        "$value": "#0A1830"
+      },
+      "overlay": {
+        "$type": "color",
+        "$value": "#07111FB3",
+        "$description": "70 %"
+      }
+    },
+    "border": {
+      "subtle": {
+        "$type": "color",
+        "$value": "#2B4478"
+      },
+      "strong": {
+        "$type": "color",
+        "$value": "#F4F7FB"
+      }
+    },
+    "text": {
+      "primary": {
+        "$type": "color",
+        "$value": "#F4F7FB"
+      },
+      "secondary": {
+        "$type": "color",
+        "$value": "#B9C6DD"
+      },
+      "disabled": {
+        "$type": "color",
+        "$value": "#7385A6",
+        "$description": "nur für gesperrte Elemente"
+      },
+      "on-accent": {
+        "$type": "color",
+        "$value": "#101010"
+      }
+    },
+    "accent": {
+      "primary": {
+        "$type": "color",
+        "$value": "#FFD21F",
+        "$description": "Signalgelb"
+      }
+    },
+    "chart": {
+      "line": {
+        "$type": "color",
+        "$value": "#7FB2FF",
+        "$description": "Linien und Symbole im Kartenstil"
+      }
+    },
+    "status": {
+      "positive": {
+        "$type": "color",
+        "$value": "#3DDC97"
+      },
+      "warning": {
+        "$type": "color",
+        "$value": "#FFB224"
+      },
+      "negative": {
+        "$type": "color",
+        "$value": "#FF6B6B"
+      },
+      "info": {
+        "$type": "color",
+        "$value": "#7FB2FF"
+      },
+      "positive-bg": {
+        "$type": "color",
+        "$value": "#3DDC9729",
+        "$description": "16 %, Fond der Status-Chips"
+      },
+      "warning-bg": {
+        "$type": "color",
+        "$value": "#FFB2242E",
+        "$description": "18 %"
+      },
+      "negative-bg": {
+        "$type": "color",
+        "$value": "#FF6B6B2E",
+        "$description": "18 %"
+      }
+    },
+    "flip": {
+      "top": {
+        "$type": "color",
+        "$value": "#071327"
+      },
+      "bottom": {
+        "$type": "color",
+        "$value": "#030A15"
+      },
+      "split": {
+        "$type": "color",
+        "$value": "{color.surface.raised}"
+      },
+      "pin": {
+        "$type": "color",
+        "$value": "{color.border.subtle}"
+      },
+      "digit": {
+        "$type": "color",
+        "$value": "{color.accent.primary}"
+      }
+    },
+    "map": {
+      "own": {
+        "$type": "color",
+        "$value": "#FFD21F",
+        "$description": "AirportKind.Own"
+      },
+      "competitor": {
+        "$type": "color",
+        "$value": "#FF8FA3",
+        "$description": "AirportKind.Competitor"
+      },
+      "available": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "AirportKind.Available"
+      },
+      "closed": {
+        "$type": "color",
+        "$value": "#7385A6",
+        "$description": "AirportKind.Closed"
+      },
+      "route": {
+        "active": {
+          "$type": "color",
+          "$value": "#FFFFFF",
+          "$description": "RouteStatus.Active"
+        },
+        "planned": {
+          "$type": "color",
+          "$value": "#FFFFFF80",
+          "$description": "RouteStatus.Planned, 50 %"
+        },
+        "paused": {
+          "$type": "color",
+          "$value": "#FFB224",
+          "$description": "RouteStatus.Paused"
+        }
+      },
+      "selection": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Ring mit Marine-Kontur"
+      }
+    }
+  },
+  "font": {
+    "family": {
+      "ui": {
+        "$type": "fontFamily",
+        "$value": "Barlow"
+      },
+      "cond": {
+        "$type": "fontFamily",
+        "$value": "Barlow Condensed"
+      }
+    }
+  },
+  "type": {
+    "flip-time": {
+      "family": "cond",
+      "weight": 700,
+      "size": "32px",
+      "lineHeight": "1"
+    },
+    "flip-date": {
+      "family": "cond",
+      "weight": 700,
+      "size": "18px",
+      "lineHeight": "1"
+    },
+    "flip-cash": {
+      "family": "cond",
+      "weight": 700,
+      "size": "32px",
+      "lineHeight": "1",
+      "$description": "wie flip-time"
+    },
+    "code": {
+      "family": "cond",
+      "weight": 700,
+      "size": "34px",
+      "lineHeight": "34px",
+      "letterSpacing": "0.02em"
+    },
+    "route": {
+      "family": "cond",
+      "weight": 700,
+      "size": "24px",
+      "lineHeight": "28px",
+      "letterSpacing": "0.02em"
+    },
+    "value": {
+      "family": "cond",
+      "weight": 700,
+      "size": "28px",
+      "lineHeight": "32px"
+    },
+    "speed": {
+      "family": "cond",
+      "weight": 700,
+      "size": "20px",
+      "lineHeight": "24px"
+    },
+    "title": {
+      "family": "ui",
+      "weight": 700,
+      "size": "18px",
+      "lineHeight": "24px"
+    },
+    "body": {
+      "family": "ui",
+      "weight": 500,
+      "size": "15px",
+      "lineHeight": "20px"
+    },
+    "button": {
+      "family": "ui",
+      "weight": 700,
+      "size": "17px",
+      "lineHeight": "20px",
+      "letterSpacing": "0.04em",
+      "case": "upper"
+    },
+    "label": {
+      "family": "cond",
+      "weight": 600,
+      "size": "13px",
+      "lineHeight": "16px",
+      "letterSpacing": "0.08em",
+      "case": "upper"
+    },
+    "caption": {
+      "family": "ui",
+      "weight": 500,
+      "size": "13px",
+      "lineHeight": "16px"
+    },
+    "chip": {
+      "family": "ui",
+      "weight": 700,
+      "size": "13px",
+      "lineHeight": "18px"
+    },
+    "maplabel": {
+      "family": "cond",
+      "weight": 700,
+      "size": "15px",
+      "lineHeight": "18px",
+      "letterSpacing": "0.08em",
+      "halo": "color.surface.base"
+    }
+  },
+  "space": {
+    "1": {
+      "$type": "dimension",
+      "$value": "4px"
+    },
+    "2": {
+      "$type": "dimension",
+      "$value": "8px"
+    },
+    "3": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "4": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "5": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "6": {
+      "$type": "dimension",
+      "$value": "32px"
+    }
+  },
+  "radius": {
+    "sm": {
+      "$type": "dimension",
+      "$value": "10px"
+    },
+    "md": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "xl": {
+      "$type": "dimension",
+      "$value": "28px"
+    },
+    "pill": {
+      "$type": "dimension",
+      "$value": "999px"
+    }
+  },
+  "border": {
+    "width": {
+      "card": {
+        "$type": "dimension",
+        "$value": "1.5px"
+      },
+      "button": {
+        "$type": "dimension",
+        "$value": "2px"
+      }
+    }
+  },
+  "shadow": {
+    "card": {
+      "$type": "shadow",
+      "$value": {
+        "color": "#00000059",
+        "offsetX": "0px",
+        "offsetY": "6px",
+        "blur": "18px",
+        "spread": "0px"
+      }
+    }
+  },
+  "size": {
+    "touch": {
+      "$type": "dimension",
+      "$value": "48px",
+      "$description": "kleinste Tastfläche"
+    },
+    "icon": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "icon-stroke": {
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    "button": {
+      "$type": "dimension",
+      "$value": "52px"
+    },
+    "speed-key": {
+      "$type": "dimension",
+      "$value": "48px"
+    },
+    "dock": {
+      "$type": "dimension",
+      "$value": "76px"
+    },
+    "dock-ring": {
+      "$type": "dimension",
+      "$value": "40px"
+    },
+    "badge": {
+      "$type": "dimension",
+      "$value": "56px"
+    },
+    "flip": {
+      "time": {
+        "width": "26px",
+        "height": "42px",
+        "radius": "8px",
+        "gap": "3px",
+        "pin": "3px",
+        "split": "2px"
+      },
+      "date": {
+        "width": "16px",
+        "height": "26px",
+        "radius": "5px",
+        "gap": "2px",
+        "pin": "2px",
+        "split": "1.5px"
+      },
+      "cash": {
+        "width": "26px",
+        "height": "42px",
+        "radius": "8px",
+        "gap": "3px",
+        "pin": "3px",
+        "split": "2px"
+      }
+    }
+  },
+  "layout": {
+    "margin": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "safe-top": {
+      "$type": "dimension",
+      "$value": "52px",
+      "$description": "Platz für die echte Statusleiste"
+    },
+    "safe-bottom": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "stack-gap": {
+      "$type": "dimension",
+      "$value": "8px",
+      "$description": "Abstand zwischen Pille, Tempo-Pille und Hinweis"
+    }
+  },
+  "motion": {
+    "duration": {
+      "fast": {
+        "$type": "duration",
+        "$value": "100ms"
+      },
+      "base": {
+        "$type": "duration",
+        "$value": "180ms"
+      },
+      "slow": {
+        "$type": "duration",
+        "$value": "280ms"
+      },
+      "flip": {
+        "$type": "duration",
+        "$value": "220ms",
+        "$description": "110 ms Oberhälfte, 110 ms Unterhälfte"
+      },
+      "flip-stagger": {
+        "$type": "duration",
+        "$value": "40ms"
+      }
+    },
+    "easing": {
+      "standard": {
+        "$type": "cubicBezier",
+        "$value": [
+          0.3,
+          0,
+          0.1,
+          1
+        ]
+      }
+    },
+    "flip-max-rate": {
+      "$type": "number",
+      "$value": 3,
+      "$description": "Wechsel pro Sekunde; schneller wechselnde Ziffern stehen gedimmt still"
+    },
+    "toast-hold": {
+      "$type": "duration",
+      "$value": "4000ms"
+    },
+    "speed-steps": {
+      "$description": "Pause, 10 min/s, 1 h/s, 6 h/s, 1 Tag/s",
+      "$value": [
+        0,
+        600,
+        3600,
+        21600,
+        86400
+      ]
+    }
+  }
+}

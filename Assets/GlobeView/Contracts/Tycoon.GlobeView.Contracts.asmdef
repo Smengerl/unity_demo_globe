@@ -1,0 +1,14 @@
+{
+    "name": "Tycoon.GlobeView.Contracts",
+    "rootNamespace": "Tycoon.GlobeView.Contracts",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

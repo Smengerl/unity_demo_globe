@@ -1,0 +1,21 @@
+{
+    "name": "Tycoon.Demo.Editor",
+    "rootNamespace": "Tycoon.Demo.EditorTools",
+    "references": [
+        "Tycoon.GlobeView.Contracts",
+        "Tycoon.GlobeView",
+        "Tycoon.Demo",
+        "Tycoon.Hud"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

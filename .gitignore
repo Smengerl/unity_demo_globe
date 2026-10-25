@@ -1,0 +1,15 @@
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+*.csproj
+*.sln
+temp-src/
+
+# Unity editor leftovers
+Assets/_Recovery*
+*.pidb.meta
+.DS_Store

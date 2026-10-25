@@ -1,0 +1,20 @@
+{
+    "name": "Tycoon.GlobeView",
+    "rootNamespace": "Tycoon.GlobeView",
+    "references": [
+        "Tycoon.GlobeView.Contracts",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.InputSystem",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
