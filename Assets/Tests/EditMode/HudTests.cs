@@ -21,11 +21,11 @@ namespace Tycoon.Tests
             Assert.AreEqual("11:20", HudFormat.Clock(t));
         }
 
-        [TestCase(12_400_000.0, "12,4", "Mio €")]
-        [TestCase(845_000.0, "845", "T €")]
-        [TestCase(1_234_000_000.0, "1,23", "Mrd €")]
+        [TestCase(12_400_000.0, "12.4", "M €")]
+        [TestCase(845_000.0, "845", "K €")]
+        [TestCase(1_234_000_000.0, "1.23", "B €")]
         [TestCase(950.0, "950", "€")]
-        [TestCase(-3_100_000.0, "−3,10", "Mio €")]
+        [TestCase(-3_100_000.0, "−3.10", "M €")]
         public void CashHasThreeDigitsAndAUnit(double value, string number, string unit)
         {
             HudFormat.Cash(value, out string n, out string u);
@@ -36,8 +36,8 @@ namespace Tycoon.Tests
         [Test]
         public void CashChangeShowsSignAndUnit()
         {
-            Assert.AreEqual("+38,2 T/Tag", HudFormat.Delta(38_200));
-            Assert.AreEqual("−12,6 T/Tag", HudFormat.Delta(-12_600));
+            Assert.AreEqual("+38.2K/day", HudFormat.Delta(38_200));
+            Assert.AreEqual("−12.6K/day", HudFormat.Delta(-12_600));
         }
 
         // ---- tokens, sprites, icons ----
@@ -153,7 +153,7 @@ namespace Tycoon.Tests
                 rig.Tick();
                 Assert.AreEqual("11:20", rig.Hud.TimeText);
                 Assert.AreEqual("SA 24.10.", rig.Hud.DateText);
-                Assert.AreEqual("12,4", rig.Hud.CashText);
+                Assert.AreEqual("12.4", rig.Hud.CashText);
             }
         }
 

@@ -21,7 +21,7 @@ namespace Tycoon.Demo.EditorTools
                 EditorApplication.delayCall += () =>
                 {
                     if (!EditorApplication.isPlaying) return;
-                    Debug.LogWarning("Skripte wurden während Play neu kompiliert – Play wurde beendet. Bitte erneut starten.");
+                    Debug.LogWarning("Scripts were recompiled during play, so play mode was stopped. Please start again.");
                     EditorApplication.isPlaying = false;
                 };
             }

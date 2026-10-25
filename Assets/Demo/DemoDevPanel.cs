@@ -51,11 +51,11 @@ namespace Tycoon.Demo
 
             qualityLabel = ButtonLabel(MakeButton("", new Vector2(10, -10), new Vector2(150, 32), CycleQuality));
             stressLabel = ButtonLabel(MakeButton("", new Vector2(170, -10), new Vector2(150, 32), () => controller.SetStress(!controller.Stress)));
-            MakeButton("Fokus FRA", new Vector2(330, -10), new Vector2(90, 32), () => host.FocusAirport(1));
+            MakeButton("Focus FRA", new Vector2(330, -10), new Vector2(90, 32), () => host.FocusAirport(1));
             infoText = MakeLabel("", new Vector2(10, -52), new Vector2(410, 22), 14);
-            MakeButton("Panel-Versatz", new Vector2(10, -82), new Vector2(150, 32), ToggleInsets);
-            MakeButton("Eingabe sperren", new Vector2(170, -82), new Vector2(150, 32), ToggleInput);
-            MakeLabel("F1 blendet dieses Panel aus", new Vector2(10, -122), new Vector2(410, 22), 12);
+            MakeButton("Panel offset", new Vector2(10, -82), new Vector2(150, 32), ToggleInsets);
+            MakeButton("Lock input", new Vector2(170, -82), new Vector2(150, 32), ToggleInput);
+            MakeLabel("F1 hides this panel", new Vector2(10, -122), new Vector2(410, 22), 12);
 
             host.CameraChanged += s => camera = s;
             panel.SetActive(false);
@@ -79,9 +79,9 @@ namespace Tycoon.Demo
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame) panel.SetActive(!panel.activeSelf);
             if (!panel.activeSelf) return;
-            qualityLabel.text = $"Qualität: {host.Tier}";
-            stressLabel.text = controller.Stress ? "Stresstest: an" : "Stresstest: aus";
-            infoText.text = $"Zoom Z{host.RawZoomStage} (Detail Z{host.ZoomStage})   {camera.Lat:0.0}°, {camera.Lon:0.0}°, Höhe {camera.Height:0.00}";
+            qualityLabel.text = $"Quality: {host.Tier}";
+            stressLabel.text = controller.Stress ? "Stress test: on" : "Stress test: off";
+            infoText.text = $"Zoom Z{host.RawZoomStage} (Detail Z{host.ZoomStage})   {camera.Lat:0.0}°, {camera.Lon:0.0}°, Height {camera.Height:0.00}";
         }
 
         void CycleQuality()

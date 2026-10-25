@@ -25,8 +25,6 @@ namespace Tycoon.GlobeView
         readonly bool isUrl;
         readonly TilesConfig config;
 
-        public string Base => baseUrl;
-
         public TileSource(TilesConfig config)
         {
             this.config = config;

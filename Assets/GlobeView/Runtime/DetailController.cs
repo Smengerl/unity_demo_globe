@@ -31,9 +31,6 @@ namespace Tycoon.GlobeView
         /// <summary>Stage from the zoom alone.</summary>
         public int RawStage { get; private set; }
         public bool FlaresAllowed => Tier >= QualityTier.Medium;
-        /// <summary>The tile window, for tests.</summary>
-        internal TileWindow Window => window;
-
         bool allowRelief, allowWaves, allowFoam, allowLights, allowNightDetail, allowDayDetail;
         TierConfig tier;
         int stageCap = 4;

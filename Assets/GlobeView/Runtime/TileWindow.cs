@@ -67,7 +67,6 @@ namespace Tycoon.GlobeView
         public bool HasData(string layer) { var l = Find(layer); return l != null && l.Shown != null; }
         public Texture2D Texture(string layer) => Find(layer)?.Shown;
         public bool Building => building;
-        public int ShownLevel => shownLevel;
         /// <summary>Tests only: keep the textures readable so pixels can be checked.</summary>
         internal bool KeepReadable;
 

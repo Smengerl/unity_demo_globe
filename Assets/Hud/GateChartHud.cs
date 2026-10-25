@@ -18,7 +18,7 @@ namespace Tycoon.Hud
     {
         static readonly double[] Rates = { 0, 600, 3600, 21600, 86400 };
         static readonly string[] RateLabels = { "", "10m", "1h", "6h", "1d" };
-        static readonly string[] TabNames = { "KARTE", "FLUGHÄFEN", "STRECKEN", "FLOTTE", "FINANZEN" };
+        static readonly string[] TabNames = { "MAP", "AIRPORTS", "ROUTES", "FLEET", "FINANCE" };
         static readonly HudIcon[] TabIcons = { HudIcon.Globe, HudIcon.Tower, HudIcon.Route, HudIcon.Plane, HudIcon.Chart };
 
         const float SpeedY = HudTokens.SafeTop + HudTokens.TopPillHeight + HudTokens.StackGap;
@@ -258,7 +258,7 @@ namespace Tycoon.Hud
 
             HudKit.Tiled(pill, "Divider", HudSprites.DashV(), HudTokens.BorderSubtle).rectTransform.Top(156, 12, 2, 74);
 
-            HudKit.Txt(pill, "Cash label", "KASSE", 13, HudTokens.TextSecondary, HudFonts.Cond, TextAnchor.MiddleLeft).rectTransform.Top(172, 12, 60, 26);
+            HudKit.Txt(pill, "Cash label", "CASH", 13, HudTokens.TextSecondary, HudFonts.Cond, TextAnchor.MiddleLeft).rectTransform.Top(172, 12, 60, 26);
             deltaText = HudKit.Txt(pill, "Cash change", "", 14, HudTokens.Positive, HudFonts.Cond, TextAnchor.MiddleRight);
             deltaText.rectTransform.TopRight(16, 12, 110, 26);
             cashRow = new FlipRow(pill, "Cash", FlipSize.Time, HudFonts.Cond, true, 30);
@@ -339,7 +339,7 @@ namespace Tycoon.Hud
             caption.rectTransform.Top(16, 44, 294, 16);
 
             // three figures with dashed dividers
-            string[] names = { "STRECKEN", "FLÜGE HEUTE", "AUSLASTUNG" };
+            string[] names = { "ROUTES", "FLIGHTS TODAY", "LOAD" };
             float[] xs = { 16f, 139f, 247f };
             for (int i = 0; i < 3; i++)
             {
@@ -359,16 +359,16 @@ namespace Tycoon.Hud
             pbg.sprite = HudSprites.Rounded(26);
             pbg.type = Image.Type.Sliced;
             pbg.color = HudTokens.Accent;
-            HudKit.Tappable(primary, () => ShowToast(HudToastKind.Info, "Neue Strecken kommen mit der Spiellogik"));
+            HudKit.Tappable(primary, () => ShowToast(HudToastKind.Info, "New routes come with the game logic"));
             HudKit.Icon(primary, "Plus", HudIcon.Plus, HudTokens.TextOnAccent, 22).rectTransform.Top(14, 15, 22, 22);
-            var ptxt = HudKit.Txt(primary, "Label", "NEUE STRECKE", 16, HudTokens.TextOnAccent, HudFonts.Ui, TextAnchor.MiddleCenter);
+            var ptxt = HudKit.Txt(primary, "Label", "NEW ROUTE", 16, HudTokens.TextOnAccent, HudFonts.Ui, TextAnchor.MiddleCenter);
             ptxt.rectTransform.Stretch();
             ptxt.rectTransform.offsetMin = new Vector2(34f, 0f);
 
             var secondary = HudKit.Node("Upgrade", sheet).Top(197, 277, 145, 52);
             HudKit.Img(secondary, "Border", HudSprites.Outline(26, 2), HudTokens.BorderStrong, sliced: true).rectTransform.Stretch();
-            HudKit.Tappable(secondary, () => ShowToast(HudToastKind.Info, "Ausbauen kommt mit der Spiellogik"));
-            HudKit.Txt(secondary, "Label", "AUSBAUEN", 17, HudTokens.TextPrimary, HudFonts.Ui, TextAnchor.MiddleCenter).rectTransform.Stretch();
+            HudKit.Tappable(secondary, () => ShowToast(HudToastKind.Info, "Upgrades come with the game logic"));
+            HudKit.Txt(secondary, "Label", "UPGRADE", 17, HudTokens.TextPrimary, HudFonts.Ui, TextAnchor.MiddleCenter).rectTransform.Stretch();
         }
 
         void UpdateSheet()
@@ -391,10 +391,10 @@ namespace Tycoon.Hud
             nameText.text = game.AirportName(airport.Id);
             var (kind, color) = airport.Kind switch
             {
-                AirportKind.Competitor => ("KONKURRENT", (Color)HudTokens.MapCompetitor),
-                AirportKind.Available => ("VERFÜGBAR", (Color)HudTokens.MapAvailable),
-                AirportKind.Closed => ("GESPERRT", (Color)HudTokens.MapClosed),
-                _ => ("EIGENER FLUGHAFEN", (Color)HudTokens.MapOwn),
+                AirportKind.Competitor => ("COMPETITOR", (Color)HudTokens.MapCompetitor),
+                AirportKind.Available => ("AVAILABLE", (Color)HudTokens.MapAvailable),
+                AirportKind.Closed => ("CLOSED", (Color)HudTokens.MapClosed),
+                _ => ("OWN AIRPORT", (Color)HudTokens.MapOwn),
             };
             kindText.text = kind;
             kindDot.color = color;
@@ -428,12 +428,12 @@ namespace Tycoon.Hud
                 float km = DistanceKm(airport.Lat, airport.Lon, other.Lat, other.Lon);
                 int minutes = Mathf.RoundToInt(km / 850f * 60f + 20f);
                 string duration = minutes >= 60 ? $"{minutes / 60} h {minutes % 60:00} min" : $"{minutes} min";
-                caption.text = $"Wichtigste Strecke · {km:0} km · {duration}";
+                caption.text = $"Main route · {km:0} km · {duration}";
             }
             else
             {
                 rightCode.text = "";
-                caption.text = "Noch keine Strecke";
+                caption.text = "No route yet";
             }
         }
 

@@ -21,21 +21,21 @@ namespace Tycoon.Demo
         // IATA, name, lat, lon, hub
         static readonly (string iata, string name, float lat, float lon, bool hub)[] Table =
         {
-            ("FRA", "Frankfurt", 50.04f, 8.56f, true), ("MUC", "München", 48.35f, 11.79f, true),
+            ("FRA", "Frankfurt", 50.04f, 8.56f, true), ("MUC", "Munich", 48.35f, 11.79f, true),
             ("BER", "Berlin Brandenburg", 52.37f, 13.50f, false), ("HAM", "Hamburg", 53.63f, 9.99f, false),
-            ("DUS", "Düsseldorf", 51.29f, 6.77f, false), ("CGN", "Köln/Bonn", 50.87f, 7.14f, false),
-            ("STR", "Stuttgart", 48.69f, 9.22f, false), ("NUE", "Nürnberg", 49.50f, 11.07f, false),
-            ("LEJ", "Leipzig/Halle", 51.42f, 12.24f, false), ("HAJ", "Hannover", 52.46f, 9.69f, false),
-            ("ZRH", "Zürich", 47.46f, 8.55f, false), ("BSL", "Basel-Mulhouse", 47.59f, 7.53f, false),
-            ("GVA", "Genf", 46.24f, 6.11f, false), ("VIE", "Wien", 48.11f, 16.57f, true),
-            ("PRG", "Prag", 50.10f, 14.26f, false), ("BUD", "Budapest", 47.44f, 19.26f, false),
-            ("WAW", "Warschau", 52.17f, 20.97f, false), ("AMS", "Amsterdam", 52.31f, 4.77f, true),
-            ("BRU", "Brüssel", 50.90f, 4.48f, false), ("CDG", "Paris Charles de Gaulle", 49.01f, 2.55f, true),
+            ("DUS", "Duesseldorf", 51.29f, 6.77f, false), ("CGN", "Cologne/Bonn", 50.87f, 7.14f, false),
+            ("STR", "Stuttgart", 48.69f, 9.22f, false), ("NUE", "Nuremberg", 49.50f, 11.07f, false),
+            ("LEJ", "Leipzig/Halle", 51.42f, 12.24f, false), ("HAJ", "Hanover", 52.46f, 9.69f, false),
+            ("ZRH", "Zurich", 47.46f, 8.55f, false), ("BSL", "Basel-Mulhouse", 47.59f, 7.53f, false),
+            ("GVA", "Geneva", 46.24f, 6.11f, false), ("VIE", "Vienna", 48.11f, 16.57f, true),
+            ("PRG", "Prague", 50.10f, 14.26f, false), ("BUD", "Budapest", 47.44f, 19.26f, false),
+            ("WAW", "Warsaw", 52.17f, 20.97f, false), ("AMS", "Amsterdam", 52.31f, 4.77f, true),
+            ("BRU", "Brussels", 50.90f, 4.48f, false), ("CDG", "Paris Charles de Gaulle", 49.01f, 2.55f, true),
             ("LHR", "London Heathrow", 51.47f, -0.45f, true), ("DUB", "Dublin", 53.43f, -6.25f, false),
-            ("CPH", "Kopenhagen", 55.62f, 12.65f, false), ("ARN", "Stockholm Arlanda", 59.65f, 17.92f, false),
-            ("OSL", "Oslo", 60.20f, 11.10f, false), ("MXP", "Mailand Malpensa", 45.63f, 8.73f, false),
-            ("FCO", "Rom Fiumicino", 41.80f, 12.24f, true), ("MAD", "Madrid", 40.49f, -3.57f, true),
-            ("LIS", "Lissabon", 38.77f, -9.13f, false), ("ATH", "Athen", 37.94f, 23.94f, false),
+            ("CPH", "Copenhagen", 55.62f, 12.65f, false), ("ARN", "Stockholm Arlanda", 59.65f, 17.92f, false),
+            ("OSL", "Oslo", 60.20f, 11.10f, false), ("MXP", "Milan Malpensa", 45.63f, 8.73f, false),
+            ("FCO", "Rome Fiumicino", 41.80f, 12.24f, true), ("MAD", "Madrid", 40.49f, -3.57f, true),
+            ("LIS", "Lisbon", 38.77f, -9.13f, false), ("ATH", "Athens", 37.94f, 23.94f, false),
             ("IST", "Istanbul", 41.28f, 28.75f, true), ("JFK", "New York JFK", 40.64f, -73.78f, true),
         };
 
@@ -58,7 +58,6 @@ namespace Tycoon.Demo
         readonly List<RouteView> routes = new List<RouteView>();
         readonly List<FlightView> flights = new List<FlightView>();
         readonly List<Timetable> timetables = new List<Timetable>();
-        readonly Dictionary<int, string> names = new Dictionary<int, string>();
         readonly Dictionary<int, string> cities = new Dictionary<int, string>();
         readonly System.Random rng = new System.Random(7);
 
@@ -109,7 +108,6 @@ namespace Tycoon.Demo
 
         public double Rate { get => rate; set => rate = Math.Max(0.0, value); }
         public bool Stress => stress;
-        public string NameOf(int airportId) => names.TryGetValue(airportId, out var n) ? n : "?";
 
         public void SetTime(double unixSeconds, double newRate)
         {
@@ -144,24 +142,16 @@ namespace Tycoon.Demo
         public void SelectRoute(int id) => Selection = new SelectionState(Selection.AirportId, id);
         public void ClearSelection() => Selection = SelectionState.None;
 
-        /// <summary>Some route that starts or ends at the airport (for the demo's "frame route" button); -1 if there is none.</summary>
-        public int FirstRouteOf(int airportId)
-        {
-            foreach (var r in routes) if (r.FromId == airportId || r.ToId == airportId) return r.Id;
-            return -1;
-        }
-
         // ---- building the world ----
 
         void Build()
         {
-            airports.Clear(); routes.Clear(); timetables.Clear(); flights.Clear(); names.Clear(); cities.Clear();
+            airports.Clear(); routes.Clear(); timetables.Clear(); flights.Clear(); cities.Clear();
             var idOf = new Dictionary<string, int>();
             for (int i = 0; i < Table.Length; i++)
             {
                 int id = i + 1;
                 idOf[Table[i].iata] = id;
-                names[id] = $"{Table[i].iata} – {Table[i].name}";
                 cities[id] = Table[i].name;
                 airports.Add(new AirportView(id, Table[i].iata, Table[i].lat, Table[i].lon, (byte)(Table[i].hub ? 3 : 1), AirportKind.Own, OwnColor, (byte)(Table[i].hub ? 2 : 1)));
             }
@@ -178,8 +168,7 @@ namespace Tycoon.Demo
                 for (int i = 0; i < 200; i++)
                 {
                     int id = 1000 + i;
-                    names[id] = $"S{i}";
-                    cities[id] = $"Stresstest {i}";
+                    cities[id] = $"Stress test {i}";
                     airports.Add(new AirportView(id, "S" + i, (float)(rng.NextDouble() * 120 - 50), (float)(rng.NextDouble() * 340 - 170), (byte)rng.Next(0, 3), AirportKind.Competitor, HudTokens.MapCompetitor));
                 }
                 for (int i = 0; i < 800; i++)
@@ -249,7 +238,7 @@ namespace Tycoon.Demo
                     flights[i] = new FlightView(f.Id, f.RouteId, f.DepartUtc + 900.0, f.ArriveUtc + 900.0, f.Backwards, f.Kind, f.Color);
                     FlightsVersion++;
                     foreach (var r in routes)
-                        if (r.Id == f.RouteId) { Notice?.Invoke(HudToastKind.Warning, $"Verspätung {AirportLabel(r.FromId)} – {AirportLabel(r.ToId)}: +15 min"); break; }
+                        if (r.Id == f.RouteId) { Notice?.Invoke(HudToastKind.Warning, $"Delay {AirportLabel(r.FromId)} – {AirportLabel(r.ToId)}: +15 min"); break; }
                     return;
                 }
             }

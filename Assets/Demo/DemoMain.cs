@@ -29,7 +29,7 @@ namespace Tycoon.Demo
             host.AirportTapped += controller.SelectAirport;
             host.EmptyTapped += (lat, lon) => controller.ClearSelection();
             host.SetPointerBlocker(p => hud.IsOverUi(p) || dev.IsOverUi(p));
-            hud.ShowToast(HudToastKind.Info, "Strecke FRA – VIE in Betrieb");
+            hud.ShowToast(HudToastKind.Info, "Route FRA – VIE is open");
         }
 
         void Update()
