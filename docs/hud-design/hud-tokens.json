@@ -1,5 +1,5 @@
 {
-  "$description": "Gate Chart – finales HUD-Konzept des Flughafen-Tycoon. Format nach W3C Design Tokens ($type/$value). Dimensionen in px (Unity: Referenzbreite 390). Alpha als Hex8 (RRGGBBAA).",
+  "$description": "Gate Chart – final HUD concept for the airport tycoon. W3C Design Tokens format ($type/$value). Dimensions in px (Unity: reference width 390). Alpha as hex8 (RRGGBBAA).",
   "color": {
     "surface": {
       "base": {
@@ -9,7 +9,7 @@
       "panel": {
         "$type": "color",
         "$value": "#0F2040",
-        "$description": "deckend, kein Blur"
+        "$description": "opaque, no blur"
       },
       "raised": {
         "$type": "color",
@@ -47,7 +47,7 @@
       "disabled": {
         "$type": "color",
         "$value": "#7385A6",
-        "$description": "nur für gesperrte Elemente"
+        "$description": "locked elements only"
       },
       "on-accent": {
         "$type": "color",
@@ -58,14 +58,14 @@
       "primary": {
         "$type": "color",
         "$value": "#FFD21F",
-        "$description": "Signalgelb"
+        "$description": "signal yellow"
       }
     },
     "chart": {
       "line": {
         "$type": "color",
         "$value": "#7FB2FF",
-        "$description": "Linien und Symbole im Kartenstil"
+        "$description": "lines and icons in map style"
       }
     },
     "status": {
@@ -88,7 +88,7 @@
       "positive-bg": {
         "$type": "color",
         "$value": "#3DDC9729",
-        "$description": "16 %, Fond der Status-Chips"
+        "$description": "16 %, background of the status chips"
       },
       "warning-bg": {
         "$type": "color",
@@ -164,7 +164,7 @@
       "selection": {
         "$type": "color",
         "$value": "#FFFFFF",
-        "$description": "Ring mit Marine-Kontur"
+        "$description": "ring with navy outline"
       }
     }
   },
@@ -198,7 +198,7 @@
       "weight": 700,
       "size": "32px",
       "lineHeight": "1",
-      "$description": "wie flip-time"
+      "$description": "same as flip-time"
     },
     "code": {
       "family": "cond",
@@ -351,7 +351,7 @@
     "touch": {
       "$type": "dimension",
       "$value": "48px",
-      "$description": "kleinste Tastfläche"
+      "$description": "smallest touch target"
     },
     "icon": {
       "$type": "dimension",
@@ -416,7 +416,7 @@
     "safe-top": {
       "$type": "dimension",
       "$value": "52px",
-      "$description": "Platz für die echte Statusleiste"
+      "$description": "room for the real status bar"
     },
     "safe-bottom": {
       "$type": "dimension",
@@ -425,7 +425,7 @@
     "stack-gap": {
       "$type": "dimension",
       "$value": "8px",
-      "$description": "Abstand zwischen Pille, Tempo-Pille und Hinweis"
+      "$description": "gap between pill, speed pill and notice"
     }
   },
   "motion": {
@@ -445,7 +445,7 @@
       "flip": {
         "$type": "duration",
         "$value": "220ms",
-        "$description": "110 ms Oberhälfte, 110 ms Unterhälfte"
+        "$description": "110 ms upper half, 110 ms lower half"
       },
       "flip-stagger": {
         "$type": "duration",
@@ -466,14 +466,14 @@
     "flip-max-rate": {
       "$type": "number",
       "$value": 3,
-      "$description": "Wechsel pro Sekunde; schneller wechselnde Ziffern stehen gedimmt still"
+      "$description": "changes per second; digits changing faster stand still, dimmed"
     },
     "toast-hold": {
       "$type": "duration",
       "$value": "4000ms"
     },
     "speed-steps": {
-      "$description": "Pause, 10 min/s, 1 h/s, 6 h/s, 1 Tag/s",
+      "$description": "Pause, 10 min/s, 1 h/s, 6 h/s, 1 day/s",
       "$value": [
         0,
         600,
