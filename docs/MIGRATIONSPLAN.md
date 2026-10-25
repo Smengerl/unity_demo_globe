@@ -12,7 +12,7 @@ Lokale Umsetzung am Rechner, ohne Android/iOS und ohne Performancemessung, danac
 
 | Phase | Stand | Anmerkung |
 |---|---|---|
-| 0 Absichern und messen | teilweise | Sicherung des Prototyps war eine Dateikopie (inzwischen gelöscht), kein Git-Repository; Geräte-Messung offen |
+| 0 Absichern und messen | teilweise | Git-Repository seit 2026-10-25 (privat auf GitHub: `Smengerl/unity_demo_globe`); Geräte-Messung offen |
 | 1 Struktur und Verträge | erledigt | Assemblies `Tycoon.GlobeView.Contracts`, `.GlobeView`, `.GlobeView.Editor`, `.Demo`, `.Demo.Editor`, `.Tests.EditMode`; Prototyp-Ordner entfernt |
 | 2 Host und Instanzen | erledigt | `GlobeViewHost` ohne Singleton und ohne Statics (außer den Shader-Globals), `Dispose`/`SetActive` |
 | 3 Datenebenen | erledigt | `GlobeData` mit Versionszählern, Marker/Routen/Flugzeuge gepoolt, Fahrplan, Verkehrsfluss ab 6 h/s |
