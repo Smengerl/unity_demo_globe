@@ -22,6 +22,7 @@ namespace Tycoon.GlobeView
         readonly GameObject halo;
         readonly Bloom bloom;
         readonly TileWindow window;
+        readonly ShaderWarmup warmup;
         readonly Texture2D clear;           // transparent: "no detail data" for layers that are not loaded
 
         public QualityTier Tier { get; private set; }
@@ -37,6 +38,7 @@ namespace Tycoon.GlobeView
         TierConfig tier;
         int stageCap = 4;
         bool dirty = true;
+        bool syncTick;
         bool dayReady, nightReady;
         int attachedVersion = -1;
         float farSince = -1f;
@@ -53,6 +55,7 @@ namespace Tycoon.GlobeView
             this.halo = halo;
             this.bloom = bloom;
             window = new TileWindow(config.Tiles);
+            warmup = new ShaderWarmup(earth.shader);
             clear = new Texture2D(1, 1, TextureFormat.RGBA32, false, true) { hideFlags = HideFlags.HideAndDontSave };
             clear.SetPixel(0, 0, new Color(0.5f, 0.5f, 1f, 0f));
             clear.Apply();
@@ -104,6 +107,8 @@ namespace Tycoon.GlobeView
                 if (level >= 0) window.Want(level, lat, lon, tier.WindowTiles, syncLoad);
             }
             window.Tick(Time.unscaledTime);
+            warmup.Tick();
+            syncTick = syncLoad;
             if (window.Version != attachedVersion) Attach();
 
             if (RawStage <= 1 && attachedVersion >= 0 && (dayReady || nightReady || window.Building))
@@ -123,21 +128,43 @@ namespace Tycoon.GlobeView
             ApplyContinuous(height);
         }
 
+        static readonly string[] AllKeywords = { "TY_RELIEF", "TY_WAVES", "TY_FOAM", "TY_LIGHTS", "TY_NIGHTDETAIL", "TY_DETAIL" };
+
+        // the keywords that are on in a stage (for the detail ones: assuming the tile window has data)
+        List<string> KeywordsFor(int stage, bool dayData, bool nightData)
+        {
+            var st = config.Stages[stage];
+            var list = new List<string>();
+            if (allowRelief && st.Relief) list.Add("TY_RELIEF");
+            if (allowWaves && st.WaveLayers > 0) list.Add("TY_WAVES");
+            if (allowFoam && st.Foam) list.Add("TY_FOAM");
+            if (allowLights && st.LightGrids > 0) list.Add("TY_LIGHTS");
+            if (allowNightDetail && st.NightDetail && nightData) list.Add("TY_NIGHTDETAIL");
+            if (allowDayDetail && st.DayDetail && dayData) list.Add("TY_DETAIL");
+            return list;
+        }
+
         void ApplyDiscrete()
         {
             var st = config.Stages[Stage];
-            Kw("TY_RELIEF", allowRelief && st.Relief);
-            Kw("TY_WAVES", allowWaves && st.WaveLayers > 0);
-            Kw("TY_FOAM", allowFoam && st.Foam);
-            Kw("TY_LIGHTS", allowLights && st.LightGrids > 0);
-            Kw("TY_NIGHTDETAIL", allowNightDetail && st.NightDetail && nightReady);
-            Kw("TY_DETAIL", allowDayDetail && st.DayDetail && dayReady);
+            var wanted = KeywordsFor(Stage, dayReady, nightReady);
 
-            earth.SetFloat("_ZWaveLayers", Mathf.Max(1, st.WaveLayers));
-            earth.SetFloat("_ZFoamDots", st.FoamDots ? 1f : 0f);
-            earth.SetFloat("_ZLightGrids", Mathf.Max(1, st.LightGrids));
-            earth.SetFloat("_ZLightWide", st.LightWide ? 1f : 0f);
-            earth.SetFloat("_ZFlares", st.Flares ? 1f : 0f);
+            // the variant for these keywords has to be compiled first; until then the old set stays on (no magenta flash)
+            if (!syncTick && !warmup.IsWarm(wanted, Time.unscaledTime)) dirty = true;
+            else
+            {
+                foreach (var k in AllKeywords) Kw(k, wanted.Contains(k));
+                earth.SetFloat("_ZWaveLayers", Mathf.Max(1, st.WaveLayers));
+                earth.SetFloat("_ZFoamDots", st.FoamDots ? 1f : 0f);
+                earth.SetFloat("_ZLightGrids", Mathf.Max(1, st.LightGrids));
+                earth.SetFloat("_ZLightWide", st.LightWide ? 1f : 0f);
+                earth.SetFloat("_ZFlares", st.Flares ? 1f : 0f);
+            }
+
+            // warm the sets of the next stage (with detail data) ahead of time
+            int next = Mathf.Min(Stage + 1, stageCap);
+            warmup.Prefetch(KeywordsFor(next, true, true), Time.unscaledTime);
+            warmup.Prefetch(KeywordsFor(Stage, true, true), Time.unscaledTime);
 
             earthMesh.sharedMesh = Stage == 0 ? meshLo : meshHi;   // coarser sphere when the globe is small
         }

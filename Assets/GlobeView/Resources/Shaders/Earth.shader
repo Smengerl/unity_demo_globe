@@ -283,16 +283,16 @@ Shader "Tycoon/Earth"
                 float water = max(waterGuess, _UseWaterMask > 0.5 ? SAMPLE_TEXTURE2D_GRAD(_WaterMask, sampler_WaterMask, uv, dx, dy).r : 0.0);
 
                 // day side: soft falloff from noon to dusk instead of a hard Lambert edge
-                float lit = smoothstep(-0.20, 1.1, ndlTerrain);
-                float3 warm = lerp(float3(1.0, 0.45, 0.25), float3(1, 1, 1), smoothstep(0.02, 0.45, ndl));
+                float lit = TySoft(-0.35, 1.1, ndlTerrain);
+                float3 warm = lerp(float3(1.0, 0.45, 0.25), float3(1, 1, 1), TySoft(-0.05, 0.55, ndl));
                 float3 col = day * (0.012 + lit * 1.35) * warm;
                 // twilight: sun between +5 deg and -18 deg elevation. Orange at the terminator, blue further into the night.
-                float dusk = smoothstep(-0.32, -0.02, ndl) * (1.0 - smoothstep(0.02, 0.30, ndl));
-                float3 duskTint = lerp(float3(0.25, 0.28, 0.65), float3(1.0, 0.42, 0.18), smoothstep(-0.25, 0.05, ndl));
+                float dusk = TySoft(-0.50, -0.02, ndl) * (1.0 - TySoft(0.02, 0.42, ndl));
+                float3 duskTint = lerp(float3(0.25, 0.28, 0.65), float3(1.0, 0.42, 0.18), TySoft(-0.40, 0.12, ndl));
                 col += (day * 0.6 + 0.04) * duskTint * dusk * 0.5;
 
                 // night side: the day map (with relief) stays faintly visible in bluish moonlight; night map and light dots come on top
-                float nightMask = 1.0 - smoothstep(-0.30, 0.10, ndl);
+                float nightMask = 1.0 - TySoft(-0.42, 0.16, ndl);
                 float moonLit = smoothstep(-0.2, 1.1, dot(Nsurf, normalize(_TycoonMoonDir.xyz)));
                 col += day * float3(0.55, 0.72, 1.0) * (0.04 + 0.09 * moonLit) * _NightDay * nightMask;
 
@@ -326,8 +326,8 @@ Shader "Tycoon/Earth"
                 float hourAngle = lonHere - atan2(L.x, -L.z);
                 hourAngle -= 6.2831853 * floor((hourAngle + 3.14159265) / 6.2831853);   // wrap to [-pi, pi)
                 float ndlMidnight = L.y * N.y - sqrt(saturate(1.0 - L.y * L.y)) * sqrt(saturate(1.0 - N.y * N.y));
-                float morning = hourAngle < 0.0 ? saturate((ndl - ndlMidnight) / max(0.2 - ndlMidnight, 1e-3)) : 0.0;
-                float lightMask = hourAngle < 0.0 ? 1.0 - morning : 1.0 - smoothstep(-0.30, 0.20, ndl);
+                float morning = hourAngle < 0.0 ? TySoft(ndlMidnight, max(0.2, ndlMidnight + 1e-3), ndl) : 0.0;
+                float lightMask = hourAngle < 0.0 ? 1.0 - morning : 1.0 - TySoft(-0.42, 0.26, ndl);
                 lightMask = lerp(lightMask, 0.35, _TycoonCalm);              // calm: a steady share of the lights stays on
                 glow *= 1.0 - morning;
                 if (lightMask > 0.01)
@@ -376,7 +376,7 @@ Shader "Tycoon/Earth"
                 float nhW = saturate(dot(Nw, H)), nhG = saturate(dot(N, H));
                 // narrow sparkle on the waves + a broad glare lobe + a very wide soft sheen: three scales of reflection
                 float glint = (pow(nhW, _Shininess) + 0.10 * pow(nhG, 60.0) + 0.035 * pow(nhG, 9.0)) * _GlintStrength;
-                col += float3(1.0, 0.92, 0.8) * glint * water * saturate(ndl * 4.0) * steady;
+                col += float3(1.0, 0.92, 0.8) * glint * water * TySoft(0.0, 0.3, ndl) * steady;
                 float fres = pow(1.0 - saturate(dot(N, V)), 4.0);
                 col += _AtmoColor.rgb * fres * 0.25 * water * lit;
 
@@ -388,7 +388,7 @@ Shader "Tycoon/Earth"
                 float graze = pow(1.0 - saturate(dot(N, V)), 3.0) * pow(saturate(dot(-V, L) * 0.5 + 0.5), 3.0);
                 col += float3(1.0, 0.92, 0.8) * graze * lit * 0.2 * _LandGlint * steady;
                 col += float3(1.0, 0.95, 0.85) * landSpec * (1.0 - water) * _LandGlint * (0.3 + 1.2 * smoothstep(0.12, 0.55, lumDay))
-                       * saturate(ndl * 4.0) * steady;
+                       * TySoft(0.0, 0.3, ndl) * steady;
 
             #if defined(TY_FOAM)
                 // Surf and foam along the coast, from the coast distance maps. Three parts, all re-rolling over time (slow, fixed speed,
@@ -436,7 +436,7 @@ Shader "Tycoon/Earth"
                 float limb = 1.0 - saturate(dot(N, V));
                 float3 rimTint = lerp(float3(0.85, 0.50, 0.24), _AtmoColor.rgb, smoothstep(-0.35, 1.0, ndl) * 0.75);   // same continuous gold-to-blue gradient as the halo
                 float fwd = pow(saturate(dot(-V, L)), 4.0);
-                col += rimTint * (pow(limb, 3.0) * 1.3 + pow(limb, 1.6) * 0.22) * saturate(ndl * 1.5 + 0.3) * (1.0 + 1.5 * fwd);
+                col += rimTint * (pow(limb, 3.0) * 1.3 + pow(limb, 1.6) * 0.22) * TySoft(-0.2, 0.5, ndl) * (1.0 + 1.5 * fwd);
                 col += rimTint * pow(limb, 4.0) * exp(-pow(ndl / 0.4, 2.0)) * 0.22;       // terminator glow, weak
 
                 return half4(col, 1);

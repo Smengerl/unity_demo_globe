@@ -181,8 +181,8 @@ namespace Tycoon.GlobeView.Contracts
 
         static StageConfig[] DefaultStages() => new[]
         {
-            new StageConfig { Name = "Z0 Weltraum", TileLevel = -1, WaveLayers = 1, LightGrids = 1 },
-            new StageConfig { Name = "Z1 Globus", TileLevel = -1, Relief = true, WaveLayers = 1, LightGrids = 1 },
+            new StageConfig { Name = "Z0 Weltraum", TileLevel = -1 },
+            new StageConfig { Name = "Z1 Globus", TileLevel = -1, Relief = true },
             new StageConfig { Name = "Z2 Kontinent", TileLevel = -1, Relief = true, WaveLayers = 1, Foam = true, LightGrids = 1 },
             new StageConfig { Name = "Z3 Region", TileLevel = 5, Relief = true, WaveLayers = 2, Foam = true, FoamDots = true, LightGrids = 2, LightWide = true, NightDetail = true, DayDetail = true, Flares = true },
             new StageConfig { Name = "Z4 nah", TileLevel = 6, Relief = true, WaveLayers = 3, Foam = true, FoamDots = true, LightGrids = 3, LightWide = true, NightDetail = true, DayDetail = true, Flares = true },

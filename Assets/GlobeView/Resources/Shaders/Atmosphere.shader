@@ -52,7 +52,7 @@ Shader "Tycoon/Atmosphere"
                 float3 closest = cp - rd * dot(cp, rd);
                 float3 L = normalize(_TycoonSunDir.xyz);
                 float sunSide = lerp(dot(normalize(closest), L), 0.3, _TycoonCalm);   // +1 sun-lit limb, -1 night limb (calm at high game speed)
-                float day = saturate(sunSide * 1.6 + 0.3);
+                float day = TySoft(-0.19, 0.45, sunSide);
                 // thick, slightly softer falloff: the glow reaches farther out than a plain power curve
                 float falloff = pow(t, 2.4) + 0.35 * pow(t, 6.0);
                 // sunset colours: orange to red near the terminator, blue on the day side

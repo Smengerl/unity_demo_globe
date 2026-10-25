@@ -402,6 +402,8 @@ Pfad: `/Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity`
 9. **Dunkle Konturen** unter Markern, Linien und Flugzeugen lösen das Problem „weiß auf Wolken/Eis unlesbar“.
 10. **Festplatte:** Das Unity-Projekt belegt mit `Library/` ca. 1,3 GB; auf dem Entwicklungs-Mac wurde der Platz zeitweise knapp.
 11. **Bekannte harmlose Meldungen:** „Script 'Foo.cs' will not be compiled because it exists outside the Assets folder“ stammt von Unity selbst; „Shader Hidden/ChartRasterizerHardware is not supported“ von der Lichtbaker-Hardware; beide ignorieren.
+12. **Magenta beim Heranzoomen:** Schaltet man ein Shader-Keyword zum ersten Mal ein, muss die Variante erst kompiliert werden (der Editor tut das im Hintergrund und zeichnet solange Magenta). `ShaderWarmup` wärmt die Varianten der nächsten Stufe vorab auf (`ShaderVariantCollection.WarmUpProgressively`) und `DetailController` schaltet einen Satz erst ein, wenn er warm ist; bis dahin bleibt der alte aktiv (nach 5 s gibt er auf). Ohne Grafik (Tests, Batchmodus) und im Capture-Werkzeug wird nichts zurückgehalten.
+13. **Kanten am Rand des Tag/Nacht-Übergangs:** Mehrere `smoothstep`-Rampen, die an verschiedenen Stellen beginnen und enden, und lineare `saturate(...)`-Rampen zeigen am Anfang und Ende eine Kante (Mach-Bänder). Alle Übergänge mit der Sonne laufen jetzt über `TySoft` (quintisch, Steigung und Krümmung 0 an beiden Enden) und über breitere Bereiche (`TycoonCommon.hlsl`).
 
 ---
 

@@ -10,6 +10,14 @@ float4x4 _TycoonStarRot;   // stars are fixed in space; rotates them into the Ea
 float _TycoonTime;         // seconds of the twinkle clock (fixed pace in real time)
 float _TycoonCalm;         // 0..1: at high game speed day and night blend toward one calm light
 
+// Smooth ramp from 0 at a to 1 at b with zero slope AND zero curvature at both ends (quintic). The cubic smoothstep still shows a
+// faint edge where a gradient starts or ends; day and night transitions use this one so nothing begins or stops visibly.
+float TySoft(float a, float b, float x)
+{
+    float t = saturate((x - a) / (b - a));
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
 float TyHash(float3 p)
 {
     p = frac(p * 0.3183099 + 0.1);
