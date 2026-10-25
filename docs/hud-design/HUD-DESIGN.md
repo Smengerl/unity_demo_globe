@@ -43,7 +43,7 @@ Nicht übernommen: Tageslichtleiste (D), Kompass-Ring und Maßstabsleiste (G), W
 ## Aufbau des Bildschirms (von oben nach unten)
 
 1. **Obere Pille:** Karte (radius 24). Links Datum (kleine Klappkarten, `SA 24.10.`) über der Zeit (`11:20`), rechts durch eine gestrichelte Linie getrennt die Kasse (`12,4 Mio €`, Klappkarten in Größe der Zeit, Einheit 24 px) mit der Änderung pro Tag. Das Tempo steht **nicht** hier, sondern in der Tempo-Pille.
-2. **Tempo-Pille:** direkt darunter, Abstand 8 px. Pause, 10 min/s, 1 h/s, 6 h/s, 1 Tag/s (Beschriftung `10m`, `1h`, `6h`, `1d`).
+2. **Tempo-Pille:** direkt darunter, Abstand 8 px. Pause, 10 min/s, 1 h/s, 6 h/s, 1 Tag/s (Beschriftung `10m`, `1h`, `6h`, `1d`). Die gelbe Markierung ist ein Schieberegler-Knopf: Sie gleitet in etwa 0,2 s zur gewählten Stufe, und die Beschriftungen färben sich dunkel, während sie darunter vorbeizieht.
 3. **Hinweis (optional):** darunter, Karte radius 16, Symbol in Statusfarbe (Info, Erfolg, Warnung, Fehler).
 4. **Globus** dazwischen (Marker, Routen, Beschriftungen kommen aus der View bzw. werden vom HUD an den Ankern gezeichnet, Text weiß mit Rand `color.surface.base`).
 5. **Auswahl-Fenster** (bei gewähltem Flughafen), über der Leiste, Abstand 12 px: Abzeichen mit Flughafen-Zeichen, Code in Gelb, Name, Art-Chip, Schließen; Strecken-Streifen; drei Kennzahlen mit gestrichelten Trennern; zwei Pillen-Buttons.

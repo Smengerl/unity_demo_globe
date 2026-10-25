@@ -47,6 +47,10 @@ namespace Tycoon.Hud
         // speed
         readonly Image[] speedBg = new Image[Rates.Length];
         readonly Text[] speedText = new Text[Rates.Length];
+        RectTransform thumb;
+        Image thumbImage;
+        float thumbX, thumbAlpha;
+        bool thumbPlaced;
         readonly Image[] speedIcon = new Image[Rates.Length];
 
         // notice
@@ -82,6 +86,8 @@ namespace Tycoon.Hud
         internal string SheetCode => codeText.text;
         internal Button SpeedButton(int index) => speedBg[index].GetComponent<Button>();
         internal int SpeedCount => Rates.Length;
+        internal float SliderX => thumbX;
+        internal static float SliderTarget(int index) { float w = (HudTokens.ColumnWidth - 8f - 16f) / Rates.Length; return 4f + index * (w + 4f); }
 
         public GateChartHud(IGlobeView view, IGlobeModel model, IHudModel game, Func<int> zoomStage, bool reduceMotion = false)
         {
@@ -171,6 +177,7 @@ namespace Tycoon.Hud
         public void Tick(float realDeltaTime)
         {
             now += realDeltaTime;
+            dtForSlider = realDeltaTime;
             if (!cameraMode) scaler.matchWidthOrHeight = Screen.width * 844f < Screen.height * 390f ? 0f : 1f;
 
             Refresh(!reduceMotion);
@@ -206,11 +213,33 @@ namespace Tycoon.Hud
             deltaText.text = HudFormat.Delta(game.CashPerDay);
             deltaText.color = game.CashPerDay < 0 ? HudTokens.Negative : HudTokens.Positive;
 
+            UpdateSlider(t.Rate, animate ? dtForSlider : 0f);
+        }
+
+        float dtForSlider;
+
+        // The highlight is a slider knob: it glides to the chosen speed, and the labels turn dark as it passes under them.
+        void UpdateSlider(double rate, float dt)
+        {
+            float w = (HudTokens.ColumnWidth - 8f - 16f) / Rates.Length;
+            int active = -1;
+            for (int i = 0; i < Rates.Length; i++) if (Math.Abs(rate - Rates[i]) < 1e-6) active = i;
+            if (active >= 0)
+            {
+                float target = 4f + active * (w + 4f);
+                thumbX = !thumbPlaced || dt <= 0f ? target : Mathf.Lerp(thumbX, target, 1f - Mathf.Exp(-dt * 14f));
+                thumbPlaced = true;
+            }
+            thumbAlpha = Mathf.MoveTowards(thumbAlpha, active >= 0 ? 1f : 0f, dt <= 0f ? 1f : dt * 6f);
+            thumb.anchoredPosition = new Vector2(thumbX, -4f);
+            thumbImage.color = HudTokens.Alpha(HudTokens.Accent, thumbAlpha);
+
+            float knobCentre = thumbX + w * 0.5f;
             for (int i = 0; i < Rates.Length; i++)
             {
-                bool on = Math.Abs(t.Rate - Rates[i]) < 1e-6;
-                speedBg[i].color = on ? HudTokens.Accent : new Color(0f, 0f, 0f, 0f);
-                var fg = on ? HudTokens.TextOnAccent : HudTokens.TextPrimary;
+                float centre = 4f + i * (w + 4f) + w * 0.5f;
+                float under = thumbAlpha * Mathf.Clamp01(1.4f - Mathf.Abs(knobCentre - centre) / (w * 0.5f));
+                var fg = Color.Lerp(HudTokens.TextPrimary, HudTokens.TextOnAccent, under);
                 if (speedText[i] != null) speedText[i].color = fg;
                 if (speedIcon[i] != null) speedIcon[i].color = fg;
             }
@@ -240,6 +269,8 @@ namespace Tycoon.Hud
         {
             var pill = HudKit.Card(column, "Speed pill", 28, HudTokens.SurfacePanel, HudTokens.BorderSubtle).Top(0, SpeedY, HudTokens.ColumnWidth, HudTokens.SpeedPillHeight);
             float w = (HudTokens.ColumnWidth - 8f - 16f) / Rates.Length;
+            thumbImage = HudKit.Img(pill, "Slider", HudSprites.Rounded(24), HudTokens.Accent, sliced: true);
+            thumb = thumbImage.rectTransform.Top(4f, 4, w, 48);
             for (int i = 0; i < Rates.Length; i++)
             {
                 int index = i;

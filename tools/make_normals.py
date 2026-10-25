@@ -58,20 +58,6 @@ hg = resample(g, xs, ys)
 to_normal(hg, lat, 360.0 / W, True).save(f"{out}/normal.png")
 print("normal.png", hg.max())
 
-# detail: z=7 tiles x 64..74, y 35..50 -> equirect rect lon 0..30, lat 35..62
-LON0, LON1, LAT0, LAT1 = 0, 30, 35, 62
-d = mosaic(7, 64, 74, 35, 50)
-W = 3072
-H = round(W * (LAT1 - LAT0) / (LON1 - LON0))
-lon = LON0 + (np.arange(W) + 0.5) / W * (LON1 - LON0)
-lat = LAT1 - (np.arange(H) + 0.5) / H * (LAT1 - LAT0)
-xs = ((lon + 180) / 360 * 128 - 64) * 256 - 0.5
-ys = (merc_y(lat) * 128 - 35) * 256 - 0.5
-hd = resample(d, xs, ys)
-to_normal(hd, lat, (LON1 - LON0) / W, False).save(f"{out}/detail_normal.png")
-print("detail_normal.png", hd.shape, hd.max())
-
-
 # deep-ocean mask for the shader: ocean areas the day-colour water guess misses (mid-ocean ridges and seamounts look pale in
 # the Blue Marble bathymetry colours and would be treated as land). Water = terrain height below -200 m.
 # 200 m keeps land basins below sea level (Death Valley, Qattara, Dead Sea shore) out. Coastlines still come from the colours.

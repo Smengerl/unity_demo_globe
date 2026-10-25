@@ -20,7 +20,7 @@ Shader "Tycoon/Earth"
         _LightDensity ("How many dots per night-map brightness (more = denser lights)", Range(0.5, 8)) = 3.5
         _UseCoast ("Use coast textures", Float) = 0
         _CoastKm ("Distance range of the global coast map (km)", Float) = 39
-        _DetailCoastKm ("Distance range of the regional coast map (km)", Float) = 34
+        _DetailCoastKm ("Distance range of the tile coast maps (km)", Float) = 39
         _Foam ("Surf and foam at the coast", Range(0, 2)) = 1
         _LandGlint ("Sun reflection on land", Range(0, 3)) = 0.8
         _ZMipBias ("Zoom stage: mip bias (far = coarser textures)", Float) = 0
@@ -146,7 +146,8 @@ Shader "Tycoon/Earth"
                     float2 uvD = (deg - _DetailRect.xy) / span;
                     float2 edge = min(uvD, 1.0 - uvD);
                     float w = smoothstep(0.0, 0.04, min(edge.x, edge.y)) * step(0.5, _DetailRect.z - _DetailRect.x);
-                    n = lerp(n, SAMPLE_TEXTURE2D_LOD(_DetailNightTex, sampler_DetailNightTex, uvD, 0).rgb, w);
+                    float4 nd = SAMPLE_TEXTURE2D_LOD(_DetailNightTex, sampler_DetailNightTex, uvD, 0);
+                    n = lerp(n, nd.rgb, w * nd.a);       // alpha: where the tile window has data
                 }
             #endif
                 return dot(n, float3(0.3, 0.5, 0.2));
@@ -262,10 +263,11 @@ Shader "Tycoon/Earth"
             #endif
             #if defined(TY_DETAIL)
                 // regional day colour and relief
-                day = lerp(day, SAMPLE_TEXTURE2D_GRAD(_DetailTex, sampler_DetailTex, uvD, dx * scaleD, dy * scaleD).rgb, wD);
+                float4 dd = SAMPLE_TEXTURE2D_GRAD(_DetailTex, sampler_DetailTex, uvD, dx * scaleD, dy * scaleD);
+                day = lerp(day, dd.rgb, wD * dd.a);       // alpha: where the tile window has data
               #if defined(TY_RELIEF)
-                float3 tnD = SAMPLE_TEXTURE2D_GRAD(_DetailNormalTex, sampler_DetailNormalTex, uvD, dx * scaleD, dy * scaleD).xyz * 2.0 - 1.0;
-                tn = lerp(tn, tnD, wD);
+                float4 tnS = SAMPLE_TEXTURE2D_GRAD(_DetailNormalTex, sampler_DetailNormalTex, uvD, dx * scaleD, dy * scaleD);
+                tn = lerp(tn, tnS.xyz * 2.0 - 1.0, wD * tnS.a);
               #endif
             #endif
 
@@ -302,8 +304,11 @@ Shader "Tycoon/Earth"
                 float2 uvNight = (nI + nF - 0.5) * _NightTex_TexelSize.xy;
                 float3 night = SAMPLE_TEXTURE2D_GRAD(_NightTex, sampler_NightTex, uvNight, dx, dy).rgb;
             #if defined(TY_REGION)
-                if (_UseDetailNight > 0.5)   // sharp 500 m night map over Central Europe
-                    night = lerp(night, SAMPLE_TEXTURE2D_GRAD(_DetailNightTex, sampler_DetailNightTex, uvD, dx * scaleD, dy * scaleD).rgb, wD);
+                if (_UseDetailNight > 0.5)   // sharp night map from the tile window
+                {
+                    float4 ns = SAMPLE_TEXTURE2D_GRAD(_DetailNightTex, sampler_DetailNightTex, uvD, dx * scaleD, dy * scaleD);
+                    night = lerp(night, ns.rgb, wD * ns.a);
+                }
             #endif
                 float3 glow = night * float3(1.0, 0.78, 0.5) * _CityGain * nightMask;
 
@@ -393,8 +398,8 @@ Shader "Tycoon/Earth"
                 {
                     float coastKm = SAMPLE_TEXTURE2D_GRAD(_CoastTex, sampler_CoastTex, uv, dx, dy).r * _CoastKm;
                   #if defined(TY_DETAIL)
-                    float coastKmD = SAMPLE_TEXTURE2D_GRAD(_DetailCoastTex, sampler_DetailCoastTex, uvD, dx * scaleD, dy * scaleD).r * _DetailCoastKm;
-                    coastKm = lerp(coastKm, coastKmD, wD);
+                    float4 cs = SAMPLE_TEXTURE2D_GRAD(_DetailCoastTex, sampler_DetailCoastTex, uvD, dx * scaleD, dy * scaleD);
+                    coastKm = lerp(coastKm, cs.r * _DetailCoastKm, wD * cs.a);
                   #endif
                     // A ripple pattern that keeps changing (three noise layers drifting in different directions, like the waves on the
                     // water) is made stronger and whiter the closer it gets to the coast. No line along the coast, no regular motion.

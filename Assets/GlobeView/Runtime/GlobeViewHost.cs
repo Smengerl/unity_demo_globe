@@ -85,8 +85,7 @@ namespace Tycoon.GlobeView
             Tex(earthMat, "_WavesTex", "waves");
             if (Tex(earthMat, "_WaterMask", "watermask", required: false)) earthMat.SetFloat("_UseWaterMask", 1f);
             if (Tex(earthMat, "_CoastTex", "coast", required: false)) earthMat.SetFloat("_UseCoast", 1f);
-            var rect = Resources.Load<TextAsset>("Earth/detail_rect");
-            if (rect != null) earthMat.SetVector("_DetailRect", ParseRect(rect.text));
+            earthMat.SetFloat("_CoastKm", config.Tiles.CoastKm);
             var meshHi = Own(MeshFactory.Sphere(192, 96));
             var meshLo = Own(MeshFactory.Sphere(96, 48));
             var earth = Body("Earth", meshHi, earthMat, 1f);
@@ -120,7 +119,7 @@ namespace Tycoon.GlobeView
         /// <summary>For screenshot tools: draws the view's own 2D overlay (the fast-forward look) into a camera instead of the screen.</summary>
         public void RenderOverlaysInto(Camera target) => rewind.RenderInto(target);
 
-        /// <summary>For tools and tests outside play mode: one tick, regional textures load synchronously.</summary>
+        /// <summary>For tools and tests outside play mode: one tick, the tile window builds synchronously.</summary>
         public void TickImmediate(float deltaTime) => TickCore(deltaTime, true);
 
         void TickCore(float dt, bool syncLoad)
@@ -130,7 +129,7 @@ namespace Tycoon.GlobeView
             if (data.AirportsChanged || data.RoutesChanged) routes.OnDataChanged(data);
 
             globeCam.Tick(dt);
-            detail.Tick(globeCam.Height, syncLoad);
+            detail.Tick(globeCam.Height, globeCam.State.Lat, globeCam.State.Lon, syncLoad);
             int stage = detail.Stage;
             var time = model.Time;
             var selection = model.Selection;
@@ -277,14 +276,6 @@ namespace Tycoon.GlobeView
             return true;
         }
 
-        static Vector4 ParseRect(string text)
-        {
-            var parts = text.Split(new[] { ' ', ',', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            var v = new float[4];
-            for (int i = 0; i < 4 && i < parts.Length; i++)
-                float.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out v[i]);
-            return new Vector4(v[0], v[1], v[2], v[3]);   // lonMin latMin lonMax latMax
-        }
 
         // Bloom makes city lights and the sun glint glow on High. Uses the scene's global volume if there is one, else makes its own.
         Bloom FindOrCreateBloom()
@@ -315,6 +306,7 @@ namespace Tycoon.GlobeView
                 globeCam.Tapped -= OnTap;
                 flare?.Destroy();
                 rewind.Destroy();
+                detail.Dispose();
                 RenderSettings.skybox = skyboxBefore;
                 if (ownVolume != null) Discard(ownVolume.gameObject);
                 foreach (var o in owned) if (o != null) Discard(o);

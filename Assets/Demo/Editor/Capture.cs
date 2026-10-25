@@ -56,7 +56,7 @@ namespace Tycoon.Demo.EditorTools
             if (tier != null) host.SetQualityTier((QualityTier)Enum.Parse(typeof(QualityTier), tier, true));
             host.SetCameraState(new CameraState(F("-lat", 50f), F("-lon", 10f), F("-height", 3f)));
             host.RenderOverlaysInto(cam);
-            for (int i = 0; i < 3; i++) host.TickImmediate(0.016f);       // zoom stage, keywords, regional textures (loaded synchronously here)
+            for (int i = 0; i < 3; i++) host.TickImmediate(0.016f);       // zoom stage, keywords, tile window (built synchronously here)
             if (F("-rate", 0f) >= 86400f) for (int i = 0; i < 4; i++) host.TickImmediate(0.2f);     // the fast-forward look fades in
             if (Arg("-time") != null) Shader.SetGlobalFloat("_TycoonTime", F("-time", 0f));
 

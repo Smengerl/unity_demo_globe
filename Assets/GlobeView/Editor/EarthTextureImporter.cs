@@ -6,7 +6,7 @@ namespace Tycoon.EditorTools
     /// <summary>Import settings for the globe textures in Resources/Earth (big, mipmapped, equirectangular).</summary>
     public class EarthTextureImporter : AssetPostprocessor
     {
-        public override uint GetVersion() => 4;   // bump to force reimport after changing the settings below
+        public override uint GetVersion() => 5;   // bump to force reimport after changing the settings below
 
         void OnPreprocessTexture()
         {
@@ -19,7 +19,7 @@ namespace Tycoon.EditorTools
             ti.anisoLevel = 8;
             ti.textureCompression = TextureImporterCompression.CompressedHQ;
             ti.sRGBTexture = !(assetPath.Contains("watermask") || assetPath.Contains("normal") || assetPath.Contains("waves") || assetPath.Contains("coast"));
-            ti.wrapModeU = assetPath.Contains("detail") ? TextureWrapMode.Clamp : TextureWrapMode.Repeat;
+            ti.wrapModeU = TextureWrapMode.Repeat;
             ti.wrapModeV = assetPath.Contains("waves") ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
             ti.npotScale = TextureImporterNPOTScale.None;
             ti.isReadable = false;

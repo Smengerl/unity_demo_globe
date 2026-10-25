@@ -5,8 +5,7 @@ so the foam follows the coastline that is actually drawn. Output is a grey PNG: 
 distance from land over the water up to 255 at DMAX pixels and beyond.
 
 Usage: python3 tools/make_coast.py Assets/GlobeView/Resources/Earth
-Writes coast.png (from day.jpg, 8192x4096, DMAX 8 px ~ 39 km) and detail_coast.png (from detail.jpg, DMAX 48 px ~ 34 km at ~0.7 km/px).
-The shader constants _CoastKm / _DetailCoastKm must match the distances below (defaults of _CoastKm / _DetailCoastKm in Earth.shader).
+Writes coast.png (from day.jpg and watermask.png, 8192x4096, DMAX 8 px ~ 39 km). The finer coast maps are tiles, see tools/build_tiles.py.
 """
 import sys
 import numpy as np
@@ -47,12 +46,6 @@ def coast_distance(water, dmax):
 
 
 deep_global = np.asarray(Image.open(f"{out}/watermask.png"), np.uint8) > 127          # 8192x4096, whole Earth
-LON0, LON1, LAT0, LAT1 = [float(v) for v in open(f"{out}/detail_rect.txt").read().split()]
-dh, dw = deep_global.shape
-region = deep_global[int((90 - LAT1) / 180 * dh):int((90 - LAT0) / 180 * dh), int((LON0 + 180) / 360 * dw):int((LON1 + 180) / 360 * dw)]
-deep_detail = np.asarray(Image.fromarray((region * 255).astype(np.uint8)).resize((4096, 3686), Image.NEAREST)) > 127
-
-for src, dst, dmax, deep in (("day.jpg", "coast.png", 8, deep_global), ("detail.jpg", "detail_coast.png", 48, deep_detail)):
-    w = water_mask(f"{out}/{src}", deep)
-    Image.fromarray(coast_distance(w, dmax), "L").save(f"{out}/{dst}")
-    print(dst, w.shape, "water %.1f %%" % (w.mean() * 100))
+w = water_mask(f"{out}/day.jpg", deep_global)
+Image.fromarray(coast_distance(w, 8), "L").save(f"{out}/coast.png")        # 8 px = 39 km, as CoastKm in globe-config.json
+print("coast.png", w.shape, "water %.1f %%" % (w.mean() * 100))

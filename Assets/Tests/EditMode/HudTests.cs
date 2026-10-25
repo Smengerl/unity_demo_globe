@@ -140,7 +140,6 @@ namespace Tycoon.Tests
                 Host.Dispose();
                 Object.DestroyImmediate(GameObject.Find("EventSystem"));
                 Object.DestroyImmediate(CamGo);
-                Object.DestroyImmediate(Config);
             }
         }
 
@@ -170,6 +169,24 @@ namespace Tycoon.Tests
                     rig.Hud.SpeedButton(i).onClick.Invoke();
                     Assert.AreEqual(expected[i], rig.Controller.Rate, "button " + i);
                 }
+            }
+        }
+
+        [Test]
+        public void SpeedHighlightSlidesToTheChosenSpeed()
+        {
+            using (var rig = new Rig())
+            {
+                rig.Controller.SetRate(600);
+                rig.Tick();
+                Assert.AreEqual(GateChartHud.SliderTarget(1), rig.Hud.SliderX, 0.01f);      // starts in place, no glide
+                rig.Hud.SpeedButton(3).onClick.Invoke();                                      // 6 h/s
+                rig.Tick(1);
+                float target = GateChartHud.SliderTarget(3);
+                Assert.Greater(rig.Hud.SliderX, GateChartHud.SliderTarget(1));                // on its way
+                Assert.Less(rig.Hud.SliderX, target);
+                rig.Tick(80);
+                Assert.AreEqual(target, rig.Hud.SliderX, 0.5f);                               // arrived
             }
         }
 

@@ -17,7 +17,7 @@ Anforderungen, die die Lösung erfüllt:
 | Anforderung | Umsetzung |
 |---|---|
 | Globus immer zentriert, Wischen dreht, Pinch/Scroll zoomt | Orbit-Kamera um den Ursprung (`GlobeCamera`) |
-| Zoom nur bis Mitteleuropa bildschirmfüllend, dort Flughäfen wählbar | `MinHeight = 0.12` Erdradien über der Oberfläche; Detailtextur 0–30°E, 35–62°N; Marker mit Tap-Auswahl über Bildschirmabstand |
+| Zoom bis ins Detail, dort Flughäfen wählbar | `MinHeight = 0.12` Erdradien über der Oberfläche; Detail aus der Kachel-Pyramide (Abschnitt 7b); Marker mit Tap-Auswahl über Bildschirmabstand |
 | Weltraum, Mond und Sonne mit realistischen Bahnen | `Astronomy.cs` (Meeus-Näherung), `SkyRenderer`, Sternen-Skybox |
 | Tag/Nacht realistisch, Städte leuchten nachts | Erd-Shader: Terminator mit Dämmerung, Black-Marble-Textur |
 | Wasser realistisch, mit Struktur, spiegelt die Sonne | Wellen-Normal-Map, Facettenschattierung, Sonnenglanz |
@@ -77,7 +77,7 @@ GlobeViewHost.Create(config, model, camera)         // ein GameObject, kein Sing
   LateUpdate -> TickCore(dt):
     GlobeData.Refresh(model)        kopiert Listen nur bei geänderter Version, leitet Richtungen/Bögen/Routenindex ab
     GlobeCamera.Tick                Eingabe, Kamerafahrt, Pose
-    DetailController.Tick           Zoomstufe, Keywords, Regionaltexturen
+    DetailController.Tick           Zoomstufe, Keywords, Kachelfenster (TileWindow)
     SkyRenderer.Tick                Sonne/Mond/Sterne aus der Spielzeit, Funkeluhr, Calm-Faktor
     AirportLayer / RouteLayer / FlightLayer.Tick
     SunFlare.Tick
@@ -97,11 +97,11 @@ GlobeViewHost.Create(config, model, camera)         // ein GameObject, kein Sing
 | `Runtime/GlobeCamera.cs` | Orbit-Kamera, Eingabe, Kamerafahrt, `FrameDirections`, Viewport-Versatz |
 | `Runtime/AirportLayer.cs`, `RouteLayer.cs`, `FlightLayer.cs` | Marker, Linien, Flugzeuge (gepoolt) |
 | `Runtime/SkyRenderer.cs`, `Astronomy.cs` | Sonne/Mond/Sterne, Funkeluhr, Calm-Faktor |
-| `Runtime/DetailController.cs` | Gerätestufe, Zoomstufen, Keywords, Regionaltextur-Streaming |
+| `Runtime/DetailController.cs`, `TileWindow.cs`, `TileSource.cs`, `TileMath.cs` | Gerätestufe, Zoomstufen (aus der Config), Keywords; Kachel-Streaming |
 | `Runtime/SunFlare.cs` | Lens Flare der Sonne |
 | `Runtime/GeoMath.cs`, `RouteMath.cs`, `ZoomStages.cs`, `MeshFactory.cs` | reine Hilfsfunktionen (öffentlich testbar bzw. intern) |
 | `Resources/Shaders/*.shader`, `TycoonCommon.hlsl` | Earth, Atmosphere, Stars, Body, Flat, Flare, gemeinsame Funktionen/Globals |
-| `Resources/Earth/*` | Texturen, `detail_rect.txt` |
+| `Resources/Earth/*`, `Resources/globe-config.json` | globale Basistexturen; die gemeinsame Konfiguration von View und Skript |
 | `Editor/EarthTextureImporter.cs` | Importeinstellungen für `Resources/Earth` |
 | `Demo/FakeController.cs` | Spielzeit, Flughäfen, Routen, Fahrplan, Verspätungen, Auswahl, Stresstest |
 | `Demo/DemoMain.cs`, `DemoDevPanel.cs` | Demo-Einstieg und Entwickler-Werkzeuge (F1: Qualität, Stresstest, Kamera-Info) |
@@ -184,21 +184,42 @@ Details und Befehle: `tools/README.md`. Kurz:
 |---|---|---|---|
 | Tag | NASA Blue Marble Next Generation (Juli 2004, Topo+Bathy), 21600×10800 | auf 8192×4096 verkleinert | `Resources/Earth/day.jpg` |
 | Nacht | NASA Black Marble 2016 Farbe, 13500×6750 | auf 8192×4096 | `night.jpg` |
-| Detail Mitteleuropa (Tag) | Blue Marble 500-m-Kachel C1 (0–90°E, 0–90°N, 240 px/Grad) | Zuschnitt 0–30°E, 35–62°N, auf 4096×3686 | `detail.jpg`, Bereich in `detail_rect.txt` (`0 35 30 62`) |
-| Detail Mitteleuropa (Nacht) | Black Marble 2016 500-m-Kachel C1 (59 MB), gleicher Zuschnitt | 4096×3686 | `detail_night.jpg` |
 | Relief global | AWS Terrain Tiles (Terrarium) z=4, 256 Kacheln | Mercator → equirektangular 4096×2048, Neigung → Normal-Map | `normal.png` |
-| Relief Mitteleuropa | AWS Terrain Tiles z=7 (x 64–74, y 35–50, 176 Kacheln) | auf Detailbereich 3072×2765 | `detail_normal.png` |
 | Wellen | selbst erzeugt (FFT, 1/f^1.4, nahtlos) | 256×256 | `waves.png` |
 | Tiefsee-Maske | AWS Terrain Tiles z=4 (Höhe unter −200 m) | 8192×4096, Wasser = weiß | `watermask.png` (ergänzt die Farb-Wassererkennung, siehe 8) |
-| Küstenabstand | aus `day.jpg`/`detail.jpg` (Wasserregel wie im Shader, plus Tiefsee-Maske) | Grauwert = Abstand vom Land über Wasser, global 0–8 px (≈39 km), Detail 0–48 px (≈34 km) | `coast.png` 8192×4096, `detail_coast.png` 4096×3686 |
+| Küstenabstand | aus `day.jpg` (Wasserregel wie im Shader, plus Tiefsee-Maske) | Grauwert = Abstand vom Land über Wasser, 0–8 px (≈39 km) | `coast.png` 8192×4096 |
 
 Terrarium-Höhe: `h = R·256 + G + B/256 − 32768` Meter. Ozean wird auf 0 geklemmt (flach). Normal-Map-Kodierung: `rgb = n·0.5+0.5`, **x = Ost, y = Nord, z = oben** (Tangentialraum des lokalen Rahmens, nicht der UV-Raum eines Meshes). Neigung 8-fach überhöht (`K = 8`), weil das echte Relief zu flach wirkt.
 
 **Import-Einstellungen** (`EarthTextureImporter`, nur Pfad `/Resources/Earth/`): max. 8192, Mipmaps, trilinear, Aniso 8, `CompressedHQ`, **sRGB aus** für `watermask`, `normal`, `waves`; `detail*` mit Clamp, `waves` mit Repeat, sonst U Repeat / V Clamp. `GetVersion()` hochzählen, um Reimport zu erzwingen.
 
-Speicher (grob): day+night je 8192×4096, detail 4096×3686, drei Normal-Maps – mit ASTC auf Android ca. 70–80 MB; Low/Medium laden halbe Größe (siehe 12).
+Speicher (grob): day+night je 8192×4096 und drei Normal-Maps (Basis, im Repo) – mit ASTC auf Android ca. 50 MB; dazu das Kachelfenster (Abschnitt 7b, je nach Gerätestufe 0 bis ca. 200 MB).
 
 Wasser wird aus der Tagfarbe geschätzt (scharfe Küsten), die Tiefsee-Maske ergänzt Meeresrücken und Seeberge, die in den Blue-Marble-Farben blass wirken und sonst als Land gälten. Nicht vorhanden: Wolken. Detailabdeckung endet bei 0°E (London, Dublin, Madrid liegen außerhalb – dafür Kachel B1 ergänzen).
+
+---
+
+## 7b. Konfiguration und Kachel-Pyramide
+
+**Eine Konfigurationsdatei** (`Assets/GlobeView/Resources/globe-config.json`) ersetzt die frühere ScriptableObject-Klasse. View und Skript lesen dieselbe Datei. Die Klasse `GlobeViewConfig` ist nur noch der Leser (`LoadDefault()`, `FromJson()`); fehlt ein Feld, gilt der Standardwert, Enums stehen als Namen (`"Tier": "High"`, `"Features": "Relief, Waves"`).
+
+| Bereich | Inhalt |
+|---|---|
+| Kamera | Start, Zoomgrenzen (`MinHeight`/`MaxHeight`), Sichtfeld, Wischen, Tippen |
+| `StageEdges`, `Stages[5]` | Höhen der Stufenwechsel; je Stufe: Name, `TileLevel` (-1 = nur Basis), Relief, Wellenschichten, Schaum, Lichtgitter, Nacht-/Tag-Detail, Flares |
+| `Tiers[3]` | Low, Medium, High: `StageCap`, erlaubte `Features`, `WindowTiles` (Kacheln pro Seite im Fenster), `LevelOffset` |
+| `Tiles` | `TileSize`, `BaseUrl`, `TilesPerFrame`, `CoastKm`, `Layers` (day, night, relief, coast mit Format und Stufenbereich) |
+| Himmel, Bewegung | Sonne/Mond, Tempo-Grenzen für Verkehrsfluss, Beruhigung und Spul-Look |
+
+**Pyramide:** Plattkarte, Stufe L hat 2^(L+1) × 2^L Kacheln zu `TileSize` Pixeln, Kachel (0, 0) liegt im Nordwesten, Dateien `EarthTiles/<Ebene>/<Stufe>/<x>_<y>.jpg|png`. Stufe 4 entspricht etwa 2,4 km pro Pixel, Stufe 5 1,2 km, Stufe 6 0,6 km. Die Kacheln liegen nicht im Repo (`.gitignore`).
+
+**Skript:** `python3 tools/build_tiles.py` liest die Config, zählt vorab die Kacheln (`--estimate`) und macht nur die Kacheln, die die Rohdaten hergeben (Quelle fein genug und ganze Kachel abgedeckt); `--layers`, `--levels`, `--workers` schränken ein. Mit den vorhandenen Rohdaten entstehen etwa 141 MB: Tag und Nacht Stufe 4 weltweit, Stufe 5 und 6 im Viertel der Erde 0–90°O, 0–90°N; Relief nur über Mitteleuropa; Küstenkacheln nur an Küsten. Fehlende Kacheln sind erlaubt, die View nimmt dann die nächstgröbere.
+
+**Laufzeit** (`TileWindow`): Aus der Stufe (`Stages[...].TileLevel` plus `LevelOffset` der Gerätestufe) und der Kameraposition ergibt sich ein Block aus `WindowTiles` × `WindowTiles` Kacheln um die Kamera. Er wird im Hintergrund zu **einer Textur je Ebene** zusammengesetzt, die der Erd-Shader im Rechteck des Blocks über die Basis legt. Fehlt eine Kachel, wird die nächstgröbere hineingedehnt; wo gar nichts existiert, bleibt das Pixel durchsichtig (Alpha 0). Ein neuer Block entsteht neben dem alten und ersetzt ihn erst, wenn er fertig ist (oder nach 8 s); er wird neu gebaut, wenn die Kamera aus der mittleren Hälfte des Blocks wandert oder die Stufe wechselt. Die Kacheln liest ein Hintergrund-Thread (Ordner) oder `UnityWebRequest` (Adresse, auch `jar:` auf Android), entschlüsselt wird auf dem Hauptthread (`TilesPerFrame`).
+
+**Speicher:** je Ebene `WindowTiles × TileSize` Pixel im Quadrat (6 Kacheln = 3072 px, rund 50 MB mit Mip-Stufen, vier Ebenen auf High also etwa 200 MB, beim Wechsel kurz das Doppelte). Low lädt nichts, Medium nur die Nachtkarte mit 4 Kacheln.
+
+**Noch offen:** Die Kacheln sind noch nicht Teil eines Player-Builds (Ordner nach `StreamingAssets/earth-tiles` kopieren oder `Tiles.BaseUrl` auf einen Server setzen); die Rohdaten für mehr Gebiete (weitere NASA-Kacheln, feinere Terrain-Stufen) müssen geladen werden; das Fenster zeigt immer nur ein Gebiet.
 
 ---
 
@@ -209,16 +230,16 @@ Ein Pass (URP, `LightMode = UniversalForward`), unlit, eigene Beleuchtung. Varia
 **Schritte pro Pixel**
 
 1. **UV** aus Mesh, Ableitungen `ddx/ddy` für `SAMPLE_TEXTURE2D_GRAD` (nötig, weil mit manuellem UV und Verzweigungen gesampelt wird).
-2. **Tagfarbe** `_DayTex`. Mit `TY_DETAIL`: Detailtextur im Rechteck `_DetailRect` (Länge/Breite in Grad), weich ausgeblendet am Rand (`smoothstep(0, 0.04, …)`); Ableitungen werden mit `360/span` bzw. `180/span` umgerechnet.
-3. **Relief** (`TY_RELIEF`): Tangentialnormale `tn` aus `_NormalTex` (und `_DetailNormalTex` im Detailbereich) → `Nterrain = normalize(E·tn.x + Nn·tn.y + N·tn.z)`; `ndlTerrain = lerp(ndl, dot(Nterrain, L), _Relief)`.
+2. **Tagfarbe** `_DayTex`. Mit `TY_DETAIL`: das Kachelfenster `_DetailTex` im Rechteck `_DetailRect` (Länge/Breite in Grad), weich ausgeblendet am Rand (`smoothstep(0, 0.04, …)`) und **nach Alpha gewichtet** (Alpha 0 = hier gibt es keine Kachel, die Basis scheint durch); Ableitungen werden mit `360/span` bzw. `180/span` umgerechnet.
+3. **Relief** (`TY_RELIEF`): Tangentialnormale `tn` aus `_NormalTex` (und `_DetailNormalTex` im Kachelfenster) → `Nterrain = normalize(E·tn.x + Nn·tn.y + N·tn.z)`; `ndlTerrain = lerp(ndl, dot(Nterrain, L), _Relief)`.
 4. **Wasser:** `water = max(Farbschätzung, Tiefsee-Maske)`; Schätzung `smoothstep(1.08, 1.45, b/(max(r,g)+0.003))` (Verhältnis statt Differenz, damit sehr dunkle Tiefsee zählt; Eis/Weiß ≈ 1 zählt nicht), Maske `watermask.png` (Höhe < −200 m; −200 statt 0, damit Senken unter dem Meeresspiegel wie Death Valley nicht als Wasser gelten). Ohne die Maske erschienen Meeresrücken als graue „Inseln“ im Ozean.
 5. **Tagseite:** `lit = smoothstep(−0.20, 1.1, ndlTerrain)` (weicher Abfall statt hartem Lambert), `col = day · (0.012 + lit·1.35) · warm`; `warm` färbt nahe dem Terminator orange.
 6. **Dämmerung:** `dusk = smoothstep(−0.32, −0.02, ndl) · (1 − smoothstep(0.02, 0.30, ndl))` – Sonne zwischen +5° und −18°. Farbe von Orange am Terminator zu Blau weiter in der Nacht; `col += (day·0.6 + 0.04) · tint · dusk · 0.5`.
 6b. **Nachtseite, Tag-Karte bleibt sichtbar:** In dunkler Nacht wird die Tagkarte samt Relief schwach in bläulichem Mondlicht dazugerechnet: `col += day · (0,55 0,72 1) · (0,04 + 0,09·moonLit) · _NightDay · nightMask`, `moonLit = smoothstep(−0,2, 1,1, dot(Nsurf, Mondrichtung))` (Shader-Global `_TycoonMoonDir`, `Nsurf` = Normale mit Relief). So bleiben Küsten, Gebirge (Alpen mit Schnee) und Land/Meer auch nachts lesbar, die pixelige Nachtkarte ist nur noch ein Anteil. `_NightDay` (0–3, Standard 0,7) regelt die Helligkeit.
 7. **Stadtlichter:** `nightMask = 1 − smoothstep(−0.30, 0.10, ndl)` (ab Sonnenuntergang, voll bei nautischer Dämmerung), `col += night · (1, 0.78, 0.5) · _CityGain · nightMask`.
-   - Die Nachtkarte wird mit **quintischer Texel-Interpolation** statt bilinear gelesen (`_NightTex_TexelSize`), damit vergrößerte Stadtlichter runder wirken. Im Detailbereich (`TY_NIGHTDETAIL`) wird zusätzlich die scharfe 500-m-Nachtkarte `detail_night` eingeblendet (`_UseDetailNight`, gleicher Rand wie die Tag-Detailtextur).
+   - Die Nachtkarte wird mit **quintischer Texel-Interpolation** statt bilinear gelesen (`_NightTex_TexelSize`), damit vergrößerte Stadtlichter runder wirken. Im Kachelfenster (`TY_NIGHTDETAIL`) wird zusätzlich die scharfe Nachtkarte aus den Kacheln eingeblendet (`_UseDetailNight`, gleicher Rand und Alpha wie das Tag-Detail).
    - **Funkelnde Lichtpunkte** (`TY_LIGHTS`, Medium/High): Beim Zoomen wird die Nachtkarte zu einem **Feld einzelner, unabhängig funkelnder Lichter**, überall auf der Erde scharf (die Punkte entstehen im Shader). **Lichter pro Kartenpunkt:** Funktion `UvLights` legt ein Gitter quadratischer Zellen in den UV-Raum (Zeilen gleicher Höhe, Zellen pro Zeile ≈ `2·cellsV·cos(lat)`, damit die Zellen auch in hohen Breiten quadratisch bleiben). Jede Zelle hat höchstens einen Punkt (weicher, runder Schein, Radius 0,7–1,05 Zellen, `exp(−r²/size²·3)`); ob er leuchtet, entscheidet die Nachtkarte **an der Position der Zelle** (`NightLumAt`: Globalkarte, im Detailrechteck die scharfe 500-m-Karte): `p = saturate(smoothstep(0,06, 0,80, sqrt(Luminanz))·_LightDensity)` (Karte ist linear, `sqrt` hebt dunkle Vororte an), Zufallszahl pro Zelle (`TyHash`) gegen `p`. Helle Karten-Pixel ergeben also viele leuchtende Zellen, dunkle fast keine; die Karte wird als Lichterfeld nachgebaut, ihre Pixel sind nicht mehr sichtbar. **Drei Gitter** mit `cellsV` = 4096 (1 Kartenpixel pro Zelle, ≈ 4,9 km), 8192 (≈ 2,4 km) und 16384 (≈ 1,2 km); das feinste Gitter, dessen Zellen mindestens ca. 2–3 Pixel groß sind, übernimmt von den gröberen (`fade = saturate((px − 1,0)/1,2)`, `w4 = f4`, `w2 = f2·(1 − f4)`, `w1 = f1·(1 − f2)`). **Wichtig:** `px` wird aus `psPix = max(length(ddx(N)), length(ddy(N)))` berechnet, nicht aus `fwidth` – `length(fwidth(N))` überschätzt die Pixelgröße um das ca. 1,5-Fache und lässt die Gitter zu früh ausblenden. **Funkeln:** pro Punkt zwei Sinusanteile mit zufälliger Rate (1,5–6 rad/s) und Phase, Faktor ca. 0,08–1, dazu kurze helle Aufblitzer (`1,6·pow(max(0, sin(…)), 14)`); Uhr `_TycoonTime` (= Echtzeituhr des `SkyRenderer`, konstante Geschwindigkeit `TwinkleSpeed = 0.45`, unabhängig von Spielzeit, Pause und Kamera; `Capture -time` friert es ein). Jedes Pixel addiert den Schein der **3×3 Zellen** um sich (`CellLight`), damit die Lichter ineinander verwaschen statt wie ein regelmäßiges Punkteraster zu wirken; die Zellen in alle Richtungen zu berücksichtigen verhindert abgeschnittene (quadratische) Ränder. Helligkeit der Gitter 0,22 / 0,3 / 0,4 (fein / mittel / grob), mal `_CityGain·0,5·_Sparkle`; höher überbelichtet die überlappenden Scheine zu weißen Flächen. **Die Nachtkarte liegt nur noch mit `_NightMapAlpha` (Standard 0,12) darunter**, dort wo Punkte aktiv sind (`glowK = lerp(1, _NightMapAlpha, saturate(f4 + f2 + f1)·saturate(_Sparkle))`). Dichte steuert `_LightDensity` (0,5–8, Standard 3,5). Weit weg (Zellen < ca. 1,6 Pixel) bleibt das gewohnte Leuchten der Karte. Steuerung `_Sparkle` (0–2; 0 = Funkeln aus).
-   - **Grenze:** Das Detailrechteck (Mitteleuropa) hat eine echte scharfe Nachtkarte; außerhalb liegen die Lichter auf dem Raster der Globalkarte (4,9 km pro Pixel, auf Low/Medium 9,8 km), werden aber durch die feinen Gitter als Punktefeld dargestellt. Eine scharfe Nachtkarte für die ganze Erde bräuchte alle acht 500-m-Kacheln (ca. 470 MB Download) und ein Kachel-Streaming.
+   - **Grenze:** Wo es Nachtkacheln gibt (Kachelfenster), ist die Nachtkarte scharf; sonst liegen die Lichter auf dem Raster der Globalkarte (4,9 km pro Pixel, auf Low/Medium 9,8 km) und werden durch die feinen Gitter als Punktefeld dargestellt. Wie weit scharfe Kacheln reichen, bestimmen die Rohdaten und `Tiles.Layers` in der Config (Abschnitt 7b).
    - **Ab Mitternacht gehen die Lichter nach und nach aus:** Ortszeit über den Stundenwinkel (`hourAngle` = Länge − Länge des Subsolarpunkts, auf [−π, π) normiert; positiv = Nachmittag/Abend, negativ = Morgen). Auf der Morgenseite wächst `morning = saturate((ndl − ndlMitternacht)/(0,2 − ndlMitternacht))` von 0 (Mitternacht) bis 1 (Ende der Morgendämmerung, Sonne ca. 11° über dem Horizont); `ndlMitternacht = L.y·N.y − √(1−L.y²)·√(1−N.y²)` ist die Sonnenhöhe um Mitternacht für diese Breite. Die Punkte nutzen `lightMask = 1 − morning` mit einem festen Schwellwert je Punkt (siehe unten), das Leuchten der Nachtkarte wird mit `(1 − morning)` gedimmt. Gemessen (Mitteleuropa, Zoom 0,3): Anteil heller Pixel Abend 3,9 %, 03:00 UTC 2,3 %, kurz vor Morgengrauen 1,0 %.
    - **Dämmerung:** Die Punkte brauchen länger als die Karte, bis sie ausgehen (`lightMask = 1 − smoothstep(−0,30, 0,20, ndl)`, Sonne bis ca. 11° über dem Horizont), und **jeder Punkt hat seine eigene harte Schwelle** (`on *= step(h2, lightMask)` mit Zufallszahl `h2` pro Zelle): Liegt `lightMask` darüber, leuchtet er voll, liegt es darunter, ist er ganz aus – kein gleichmäßiges Herunterdimmen. Je höher die Sonne steigt (bzw. nach Mitternacht), desto weniger Lichter sind an; sie gehen nacheinander aus, abends nacheinander an.
 8. **Wellen** (`TY_WAVES`, nur Wasser): drei Schichten derselben `waves.png` mit **unverwandten Maßstäben und Winkeln** (Kachelzahlen 80/210/520 in Länge, Winkel 0°/37°/71°, Drift gegenläufig), plus große ruhige/raue Flecken aus einem sehr großen Durchlauf derselben Textur (`calmRough`). Normale wird gekippt: `Nw = normalize(E·g.x + Nn·g.y + N)`. Facetten: `facet = 1 + 5·(dot(Nw,L)−ndl) + 2·(dot(Nw,V)−dot(N,V))`, geklemmt 0,45–1,7, multipliziert auf die Wasserfarbe. Fade mit Abstand `saturate(1 − length(fwidth(N))·220)`; Mip-Mittelung glättet zusätzlich.
@@ -316,7 +337,7 @@ Wechsel mit **12 % Hysterese** (`StageEdges = {3,2; 1,6; 0,75; 0,32}`, früh gew
 | Schaum (`TY_FOAM`, `_ZFoamDots`) | aus | aus | weicher Kräuselsaum, keine Pixel | + weiße Pixel | alle Pixelgrößen |
 | Lichtpunkte (`TY_LIGHTS`) | aus | aus | 1 Gitter, nur die eigene Zelle (`_ZLightWide` = 0) | 2 Gitter, 3×3-Überlappung | 3 Gitter, 3×3 |
 | Aufblitzer der Lichter (`_ZFlares`) | – | – | aus | an | an |
-| Regionaltexturen (`detail`, `detail_normal`, `detail_night`, `detail_coast`) | nicht geladen | nicht geladen | nicht geladen | werden geladen | geladen |
+| Kachelfenster (Tag, Nacht, Relief, Küste) | nicht geladen | nicht geladen | nicht geladen | wird gebaut (ab Z2 vorab) | gebaut, feinere Kacheln |
 | scharfe Nachtkarte (`TY_NIGHTDETAIL`) / Tag-Detail (`TY_DETAIL`) | aus | aus | aus | an (Medium+ / High) | an |
 | Mip-Bias (`_ZMipBias`) | +1 (gröbere Mips) | blendet aus | 0 | 0 | 0 |
 | Globus-Mesh | 96×48 | 192×96 | 192×96 | 192×96 | 192×96 |
@@ -325,11 +346,11 @@ Wechsel mit **12 % Hysterese** (`StageEdges = {3,2; 1,6; 0,75; 0,32}`, früh gew
 | Flughafen-Beschriftung (Demo-UI an den Ankern) | keine | keine | nur `Importance` 3 | alle | alle |
 | Routen / Flugzeuge | nur Hauptrouten (`Importance` 1), 1 Flugzeug | wie Z0 | alle Routen, bis 2 Flugzeuge | alle, bis 4 | alle |
 
-- **Regionaltexturen laden schon ab Z2 (eine Stufe vorher, damit sie bei Z3 da sind)** (`Resources.LoadAsync`, kein Ruckeln) und werden **4 s nach dem Herauszoomen unter Z1** wieder freigegeben (`Resources.UnloadAsset`); das spart auf dem Handy den Speicher für ca. 20 MB Textur (komprimiert, auf ASTC deutlich weniger). Die Keywords `TY_DETAIL`/`TY_NIGHTDETAIL` werden erst gesetzt, wenn die Texturen da sind, und vor dem Entladen ausgeschaltet.
+- **Das Kachelfenster wird schon ab Z2 gebaut** (eine Stufe vorher, damit es bei Z3 da ist), im Hintergrund und mit höchstens `TilesPerFrame` Kacheln pro Bild, und **4 s nach dem Herauszoomen unter Z1** wieder freigegeben. Die Keywords `TY_DETAIL`/`TY_NIGHTDETAIL` werden erst gesetzt, wenn das Fenster da ist, und vor dem Freigeben ausgeschaltet.
 - **Stufenlose Anteile** (Relief-Stärke, Mip-Bias) folgen der Höhe zwischen `StageEdges[1]` und `StageEdges[0]` = 1,6 und 3,2 (`smoothstep`); alles Strukturelle (zusätzliche Gitter, Wellenschichten, Keywords) schaltet an den Stufengrenzen. Lichter, Schaum und Wellen blenden zusätzlich pixelgrößenabhängig aus (`psPix`).
 - **Abweichungen vom ursprünglichen Konzept:** Statt einer eigenen 2k-Tagtextur für Z0 wird einfach ein gröberer Mip gelesen (`_ZMipBias`, ändert den Speicher nicht, spart aber Bandbreite). Die „leicht weichgezeichnete“ Nachtkarte für Z2 wurde nicht umgesetzt (die quintische Interpolation der Globalkarte reicht). Der Halo wird ausgeschaltet statt gröber gemeint.
 - **Routen** werden zusätzlich abgeschaltet, wenn sie komplett hinter dem Horizont liegen (`max(dot(A), dot(B), dot(Mitte), Kamerarichtung) > 1/(1 + Höhe) − 0,25`).
-- **Test:** `Capture -height` wählt die Stufe (z. B. 3,5 = Z0, 2,0 = Z1, 1,0 = Z2, 0,5 = Z3, 0,2 = Z4); `GlobeViewHost.TickImmediate` lädt die Regionaltexturen synchron.
+- **Test:** `Capture -height` wählt die Stufe (z. B. 3,5 = Z0, 2,0 = Z1, 1,0 = Z2, 0,5 = Z3, 0,2 = Z4); `GlobeViewHost.TickImmediate` baut das Kachelfenster synchron.
 
 ### Verhalten bei hohem Tempo (`Rate`)
 
@@ -403,7 +424,7 @@ Pfad: `/Applications/Unity/Hub/Editor/6000.6.7f1/Unity.app/Contents/MacOS/Unity`
 - **Geräte:** Android- und iOS-Builds, Messung (fps, Wärme, Speicher), URP-Einstellungen je Stufe und halbe Texturgröße für Low/Medium (siehe 12), Schwellen der Gerätestufen.
 - Wolken als gebackene Textur (statische NASA-Karte oder aus dem archivierten Code gebacken), zwei driftende Schichten.
 - Sterne als kleine Cubemap statt Rechnung; Bloom-Ersatz für die Stadtlichter auf Low/Medium.
-- Detailtextur auch für Westeuropa (Kachel B1), langfristig Kachel-Streaming für beliebiges Heranzoomen.
+- Kacheln für mehr Gebiete und feinere Stufen: weitere Rohdaten laden (`tools/get_data.sh`, jetzt nur Mitteleuropa und ein Viertel der Erde in 500 m) und `build_tiles.py` laufen lassen; Kacheln im Player-Build (StreamingAssets-Kopie oder Server, `Tiles.BaseUrl`).
 - Flugzeuge und Marker per GPU-Instancing, sobald viele zu sehen sind; Antippen von Routen und Flugzeugen; freie Flugposen für Sonderflüge.
 - Eine flache Planungskarte neben dem Globus (Entscheidung steht aus).
 

@@ -144,7 +144,86 @@ namespace Tycoon.Tests
             Assert.AreEqual(4, cfg.StageEdges.Length);
             for (int i = 1; i < 4; i++) Assert.Less(cfg.StageEdges[i], cfg.StageEdges[i - 1]);
             Assert.Less(cfg.MinHeight, cfg.MaxHeight);
-            UnityEngine.Object.DestroyImmediate(cfg);
+            Assert.AreEqual(ZoomStages.Count, cfg.Stages.Length);
+            Assert.AreEqual(3, cfg.Tiers.Length);
+            for (int i = 1; i < cfg.Stages.Length; i++)
+                if (cfg.Stages[i].TileLevel >= 0) Assert.GreaterOrEqual(cfg.Stages[i].TileLevel, cfg.Stages[i - 1].TileLevel, "finer stages use finer tiles");
+            foreach (var stage in cfg.Stages)
+                if (stage.TileLevel >= 0)
+                    foreach (var layer in cfg.Tiles.Layers) Assert.LessOrEqual(layer.MinLevel, stage.TileLevel + 1);
+        }
+
+        [Test]
+        public void ConfigFileReadsEnumsByNameAndKeepsDefaultsForMissingFields()
+        {
+            var cfg = GlobeViewConfig.FromJson("{ \"Tier\": \"High\", \"Features\": \"Relief, Waves\", \"Sun\": \"Fixed\", \"MinHeight\": 0.2, \"Tiers\": [ { \"Name\": \"A\", \"Features\": \"Lights\", \"StageCap\": 1 }, { \"Name\": \"B\" }, { \"Name\": \"C\" } ] }");
+            Assert.AreEqual(QualityTier.High, cfg.Tier);
+            Assert.AreEqual(GlobeFeatures.Relief | GlobeFeatures.Waves, cfg.Features);
+            Assert.AreEqual(SunMode.Fixed, cfg.Sun);
+            Assert.AreEqual(0.2f, cfg.MinHeight, 1e-5f);
+            Assert.AreEqual(5f, cfg.MaxHeight);                                  // not in the text: default
+            Assert.AreEqual(1, cfg.Tiers[0].StageCap);
+            Assert.AreEqual(GlobeFeatures.Lights, cfg.Tiers[0].Features);
+            Assert.AreEqual(5, cfg.Stages.Length);                              // not in the text: default stages
+        }
+
+        [Test]
+        public void TileWindowStretchesCoarserTilesInAndLeavesGapsTransparent()
+        {
+            string dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "globe-tiles-" + System.Guid.NewGuid().ToString("N"));
+            try
+            {
+                var t3 = TileMath.TileOf(48f, 10f, 3);
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(dir, "day", "3"));
+                var red = new Texture2D(64, 64, TextureFormat.RGBA32, false);
+                var fill = new Color32[64 * 64];
+                for (int i = 0; i < fill.Length; i++) fill[i] = new Color32(255, 0, 0, 255);
+                red.SetPixels32(fill);
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, "day", "3", t3.x + "_" + t3.y + ".png"), red.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(red);
+
+                var cfg = GlobeViewConfig.FromJson("{ \"Tiles\": { \"BaseUrl\": \"" + dir.Replace("\\", "/") + "\", \"TileSize\": 64, \"Layers\": [ { \"Name\": \"day\", \"Format\": \"png\", \"MinLevel\": 2, \"MaxLevel\": 4 } ] } }");
+                var window = new TileWindow(cfg.Tiles) { KeepReadable = true };
+                window.SetLayers(new[] { "day" });
+
+                window.Want(4, 48f, 10f, 2, true);                        // level 4 has no files: the level 3 tile is stretched in
+                Assert.IsTrue(window.HasData("day"));
+                var tex = window.Texture("day");
+                Assert.AreEqual(128, tex.width);
+                int redPixels = 0, clear = 0;
+                foreach (var p in tex.GetPixels32())
+                {
+                    if (p.a == 255 && p.r == 255 && p.g == 0) redPixels++;
+                    if (p.a == 0) clear++;
+                }
+                Assert.Greater(redPixels, 64 * 64 - 1, "at least one whole cell comes from the stretched tile");
+                Assert.AreEqual(128 * 128, redPixels + clear, "everything else stays transparent");
+                var rect = window.Rect;
+                Assert.Less(rect.x, 10f);
+                Assert.Greater(rect.z, 10f);
+
+                window.Want(4, -60f, 10f, 2, true);                       // nothing exists down there: no data, the base shows through
+                Assert.IsFalse(window.HasData("day"));
+                window.Release();
+            }
+            finally { if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true); }
+        }
+
+        [Test]
+        public void TileGeometryMatchesThePyramid()
+        {
+            Assert.AreEqual(64, TileMath.Cols(5));
+            Assert.AreEqual(32, TileMath.Rows(5));
+            var t = TileMath.TileOf(50f, 8.5f, 5);                              // Frankfurt
+            var b = TileMath.Bounds(5, t.x, t.y, 1, 1);
+            Assert.That(8.5f, Is.InRange(b.x, b.z));
+            Assert.That(50f, Is.InRange(b.y, b.w));
+            Assert.AreEqual(182.04f, TileMath.PixelsPerDegree(6, 512), 0.1f);
+            var (x0, y0, n) = TileMath.Place(6, 89f, 179.9f, 6);                // near the corner: the block stays inside the world
+            Assert.AreEqual(TileMath.Cols(6) - 6, x0);
+            Assert.AreEqual(0, y0);
+            Assert.AreEqual(6, n);
+            Assert.AreEqual(2, TileMath.Place(1, 0f, 0f, 6).n);                 // level 1 has only 2 rows
         }
     }
 
@@ -203,7 +282,6 @@ namespace Tycoon.Tests
         {
             host.Dispose();
             UnityEngine.Object.DestroyImmediate(camGo);
-            UnityEngine.Object.DestroyImmediate(config);
         }
 
         void Tick() { for (int i = 0; i < 3; i++) host.TickImmediate(0.016f); }
@@ -321,7 +399,6 @@ namespace Tycoon.Tests
         {
             if (host != null) host.Dispose();
             if (camGo != null) UnityEngine.Object.DestroyImmediate(camGo);
-            if (config != null) UnityEngine.Object.DestroyImmediate(config);
             host = null; camGo = null; config = null;
         }
 
@@ -385,7 +462,6 @@ namespace Tycoon.Tests
             {
                 rewind.Destroy();
                 UnityEngine.Object.DestroyImmediate(camGo);
-                UnityEngine.Object.DestroyImmediate(config);
             }
         }
 
@@ -405,7 +481,6 @@ namespace Tycoon.Tests
             {
                 rewind.Destroy();
                 UnityEngine.Object.DestroyImmediate(camGo);
-                UnityEngine.Object.DestroyImmediate(config);
             }
         }
 

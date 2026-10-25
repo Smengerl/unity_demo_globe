@@ -42,14 +42,14 @@ Koordinatenkonvention: `Assets/GlobeView/Runtime/GeoMath.cs`; Shader und C# nutz
 
 ## Texturen (`Assets/GlobeView/Resources/Earth/`)
 
-Ohne Texturen ist die Erde grau. Dateinamen sind fest verdrahtet (jpg oder png); erzeugt mit `tools/` (siehe `tools/README.md`):
+Ohne Texturen ist die Erde grau. Dateinamen sind fest verdrahtet (jpg oder png); erzeugt mit `tools/` (siehe `tools/README.md`). Alles, was die View und das Skript einstellen, steht in `Assets/GlobeView/Resources/globe-config.json`:
 
 | Datei | Inhalt |
 |---|---|
 | `day`, `night` | Tagtextur (NASA Blue Marble) und Stadtlichter (NASA Black Marble), equirektangular, 8192×4096 |
 | `normal`, `waves` | Relief-Normal-Map (SRTM/AWS-Höhen) und kachelbare Wellen-Normal-Map |
 | `watermask`, `coast` | Tiefsee-Maske und Küstenabstand (Schaum) |
-| `detail`, `detail_normal`, `detail_night`, `detail_coast` + `detail_rect.txt` | regionale Zusatztexturen für Mitteleuropa; `detail_rect.txt` enthält `lonMin latMin lonMax latMax` |
+| `EarthTiles/` (nicht im Repo) | die Kachel-Pyramide für Tag, Nacht, Relief und Küste; `python3 tools/build_tiles.py` macht sie aus den Rohdaten, siehe `docs/LOESUNG.md` Abschnitt 7b |
 
 ## Dokumentation
 
@@ -72,6 +72,6 @@ Beim Start nach Gerätespeicher/Kernen gewählt (Desktop = High), im Demo-HUD du
 |---|---|
 | Low | flacher Ozean, kein Relief, keine Detailtextur, kein Bloom; höchstens Zoomstufe Z2 |
 | Medium | + Relief, animierte Wellen, scharfe Nachtkarte, funkelnde Stadtlichter (ab Mitternacht nach und nach aus), Schaum und Brandung; bis Z3 |
-| High | + Detailtextur Mitteleuropa, Bloom; bis Z4 |
+| High | + Kachel-Detail (Tag, Relief, Küste), Bloom; bis Z4 |
 
 Noch nicht umgesetzt (kommt mit der Handy-Portierung): Render-Scale, MSAA und halbe Texturgröße je Stufe, 30 fps auf dem Handy. Die prozeduralen Wolken wurden entfernt (zu teuer).

@@ -13,3 +13,6 @@ temp-src/
 Assets/_Recovery*
 *.pidb.meta
 .DS_Store
+
+# tile pyramid made by tools/build_tiles.py
+EarthTiles/

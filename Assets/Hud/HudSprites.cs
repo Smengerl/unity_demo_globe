@@ -23,7 +23,7 @@ namespace Tycoon.Hud
         {
             int r = Mathf.Max(1, Mathf.RoundToInt(radius * Texels));
             int w = Mathf.RoundToInt(width * Texels);
-            long key = r | ((long)(int)corners << 16) | ((long)w << 24);
+            long key = (long)r | ((long)(int)corners << 16) | ((long)w << 24);
             if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
 
             int n = 2 * r + 2;
