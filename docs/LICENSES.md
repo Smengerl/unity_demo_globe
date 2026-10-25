@@ -6,7 +6,7 @@ Status: 2026-10-25. Review of everything this repository contains or needs to bu
 
 | Area | Licence / terms | Redistributable in the repo | Obligation |
 |---|---|---|---|
-| Own code (C#, shaders, Python, scripts) | not yet licensed – see section 5 | – | – |
+| Own code (C#, shaders, Python, scripts) | MIT, see [LICENSE](../LICENSE) | yes | keep the copyright notice |
 | Own assets (`waves.png`, HUD tokens/icons, docs, screenshots of own work) | follow the code licence | yes | – |
 | Barlow / Barlow Condensed fonts | SIL OFL 1.1 | yes (texts included) | keep licence texts and copyright, credits page in the app, do not sell the font alone |
 | NASA Blue Marble Next Generation (day texture) | NASA imagery, not copyright-protected in general | yes | credit NASA; do not imply endorsement |
@@ -45,7 +45,9 @@ Barlow Regular, Barlow Bold, Barlow Condensed Bold, © The Barlow Project Author
 - **HUD icons**: line icons drawn from short SVG path strings written for this project (`Assets/Hud/HudIcons.cs`), not copied from an icon set. As with any simple pictogram (globe, plane, chart) similarity to other sets is possible; they are generic shapes.
 - **Python tools**: `numpy` (BSD-3-Clause) and `Pillow` (HPND) are used at build time only.
 
-## 5. Proposed licence for this repository
+## 5. Licence of this repository (decided: MIT)
+
+Decision 2026-10-25: MIT, Copyright (c) 2026 Simon Gerlach. The reasoning and the alternatives that were considered:
 
 **Recommendation: MIT** for all own code and own assets, with the third-party material above staying under its own terms.
 
