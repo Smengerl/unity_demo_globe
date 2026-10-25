@@ -202,6 +202,8 @@ The tests cover geometry and astronomy, zoom stages, the configuration file, the
 
 Runs on the desktop (developed and tested on macOS with Unity 6000.6.7f1). Not yet done: Android and iOS builds with measurements on real devices, the game logic (economy, airport and route management), screens behind the gate bar, tiles inside player builds (copy `EarthTiles` to `StreamingAssets/earth-tiles` or set `Tiles.BaseUrl`), a licenses page in the app.
 
+**Building your own game from this repository?** Change the bundle identifier (`io.github.smengerl.unitydemoglobe`) and the company name in *Project Settings → Player* to your own before you publish a build.
+
 ## Credits and licenses
 
 - Earth imagery: NASA Blue Marble Next Generation (topography and bathymetry, July 2004) and NASA Black Marble 2016 (Earth Observatory). NASA material is generally public domain; check the NASA media usage guidelines before you publish.

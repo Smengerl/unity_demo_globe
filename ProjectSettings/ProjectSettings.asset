@@ -170,16 +170,16 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.UnityTechnologies.com.unity.template.urpblank
-    Standalone: com.Unity-Technologies.com.unity.template.urp-blank
-    iPhone: com.Unity-Technologies.com.unity.template.urp-blank
-    tvOS: com.Unity-Technologies.com.unity.template.urp-blank
+    Android: io.github.smengerl.unitydemoglobe
+    Standalone: io.github.smengerl.unitydemoglobe
+    iPhone: io.github.smengerl.unitydemoglobe
+    tvOS: io.github.smengerl.unitydemoglobe
   buildNumber:
     Standalone: 0
     VisionOS: 0
     iPhone: 0
     tvOS: 0
-  overrideDefaultApplicationIdentifier: 0
+  overrideDefaultApplicationIdentifier: 1
   AndroidBundleVersionCode: 1
   AndroidMinSdkVersion: 26
   AndroidTargetSdkVersion: 0
